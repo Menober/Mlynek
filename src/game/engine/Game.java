@@ -4,12 +4,14 @@ import game.assets.Assets;
 import game.display.Display;
 import game.input.KeyManager;
 import game.input.MouseManager;
+import game.states.EndgameState;
 import game.states.GameState;
 import game.states.MenuState;
 import game.states.State;
 
 import java.awt.*;
 import java.awt.image.BufferStrategy;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 
 import static game.engine.Gracz.BIALY;
@@ -29,13 +31,24 @@ public class Game implements Runnable {
     public int tankColor;
     public int liczbaPionkowDoRozstawieniaBIALY = 9;
     public int liczbaPionkowDoRozstawieniaCZARNY = 9;
+    public int liczbaPionkowBIALY = 0;
+    public int liczbaPionkowCZARNY = 0;
     public Gracz ruch = BIALY;
     public ArrayList<Pole> board = new ArrayList<>();
+    public ArrayList<Mlynek> mlynki = new ArrayList<Mlynek>();
     long czasOdStartu;
     Pole wybranyPionek;
     boolean czyWybral;
-    long opoznienie=200;
+    long opoznienie = 200;
     long timeHelper;
+    boolean czyCzarnyZbija = false;
+    boolean czyBialyZbija = false;
+    int ileBialyZbija = 0;
+    int ileCzarnyZbija = 0;
+    Gracz ktoWygral = null;
+    Pole ostatniePoleBialego = new Pole("start",0);
+    Pole ostatniePoleCzarnego = new Pole("start",0);
+
 
     Game(Handler handler) {
         this.handler = handler;
@@ -84,6 +97,113 @@ public class Game implements Runnable {
         Pole G4 = new Pole("G", 4);
         Pole G7 = new Pole("G", 7);
 
+        A1.sasiedzi.add(A4);
+        A1.sasiedzi.add(D1);
+
+        A4.sasiedzi.add(A1);
+        A4.sasiedzi.add(A7);
+        A4.sasiedzi.add(B4);
+
+        A7.sasiedzi.add(A4);
+        A7.sasiedzi.add(D7);
+
+        B2.sasiedzi.add(D2);
+        B2.sasiedzi.add(B4);
+
+        B4.sasiedzi.add(A4);
+        B4.sasiedzi.add(B2);
+        B4.sasiedzi.add(B6);
+        B4.sasiedzi.add(C4);
+
+        B6.sasiedzi.add(B4);
+        B6.sasiedzi.add(D6);
+
+        C3.sasiedzi.add(C4);
+        C3.sasiedzi.add(D3);
+
+        C4.sasiedzi.add(B4);
+        C4.sasiedzi.add(C3);
+        C4.sasiedzi.add(C5);
+
+        C5.sasiedzi.add(C4);
+        C5.sasiedzi.add(D5);
+
+        D1.sasiedzi.add(A1);
+        D1.sasiedzi.add(G1);
+        D1.sasiedzi.add(D2);
+
+        D2.sasiedzi.add(B2);
+        D2.sasiedzi.add(D1);
+        D2.sasiedzi.add(D3);
+        D2.sasiedzi.add(F2);
+
+        D3.sasiedzi.add(C3);
+        D3.sasiedzi.add(D2);
+        D3.sasiedzi.add(E3);
+
+        D5.sasiedzi.add(C5);
+        D5.sasiedzi.add(D6);
+        D5.sasiedzi.add(E5);
+
+        D6.sasiedzi.add(B6);
+        D6.sasiedzi.add(D5);
+        D6.sasiedzi.add(D7);
+        D6.sasiedzi.add(F6);
+
+        D7.sasiedzi.add(A7);
+        D7.sasiedzi.add(D6);
+        D7.sasiedzi.add(G7);
+
+        E3.sasiedzi.add(D3);
+        E3.sasiedzi.add(E4);
+
+        E4.sasiedzi.add(E3);
+        E4.sasiedzi.add(E5);
+        E4.sasiedzi.add(F4);
+
+        E5.sasiedzi.add(D5);
+        E5.sasiedzi.add(E4);
+
+        F2.sasiedzi.add(D2);
+        F2.sasiedzi.add(F4);
+
+        F4.sasiedzi.add(E4);
+        F4.sasiedzi.add(F2);
+        F4.sasiedzi.add(F6);
+        F4.sasiedzi.add(G4);
+
+        F6.sasiedzi.add(D6);
+        F6.sasiedzi.add(F4);
+
+        G1.sasiedzi.add(D1);
+        G1.sasiedzi.add(G4);
+
+        G4.sasiedzi.add(F4);
+        G4.sasiedzi.add(G1);
+        G4.sasiedzi.add(G7);
+
+        G7.sasiedzi.add(D7);
+        G7.sasiedzi.add(G4);
+
+        mlynki.add(new Mlynek(A1, A4, A7));
+        mlynki.add(new Mlynek(B2, B4, B6));
+        mlynki.add(new Mlynek(C3, C4, C5));
+        mlynki.add(new Mlynek(D1, D2, D3));
+        mlynki.add(new Mlynek(D5, D6, D7));
+        mlynki.add(new Mlynek(E3, E4, E5));
+        mlynki.add(new Mlynek(F2, F4, F6));
+        mlynki.add(new Mlynek(G1, G4, G7));
+
+        mlynki.add(new Mlynek(A1, D1, G1));
+        mlynki.add(new Mlynek(B2, D2, F2));
+        mlynki.add(new Mlynek(C3, D3, E3));
+        mlynki.add(new Mlynek(A4, B4, C4));
+        mlynki.add(new Mlynek(E4, F4, G4));
+        mlynki.add(new Mlynek(C5, D5, E5));
+        mlynki.add(new Mlynek(B6, D6, F6));
+        mlynki.add(new Mlynek(A7, D7, G7));
+
+
         board.add(A1);
         board.add(A4);
         board.add(A7);
@@ -112,7 +232,7 @@ public class Game implements Runnable {
         dopasujPozycje();
         czasOdStartu = System.currentTimeMillis();
         //  wypelnijPola();
-        rozdajPionki();
+        //  rozdajPionki();
     }
 
     private void rozdajPionki() {
@@ -213,21 +333,25 @@ public class Game implements Runnable {
 
         if (currentState.getClass() != MenuState.class) {
             drawBoard(graphics);
-            Font font = new Font("",1,20);
+            Font font = new Font("", 1, 20);
             graphics.setFont(font);
             graphics.drawString("Czas gry: " + (System.currentTimeMillis() - czasOdStartu) / 1000 + " [s]", 950, 20);
-            graphics.drawString("Gracz 1",950,50);
-            graphics.drawString("Gracz 2",950+64+50,50);
-            graphics.drawString("Ruch gracza:",950,800);
+            graphics.drawString("Gracz 1 [" + liczbaPionkowBIALY + "]", 950, 50);
+            graphics.drawString("Gracz 2 [" + liczbaPionkowCZARNY + "]", 950 + 64 + 50, 50);
+            graphics.drawString("Ruch gracza:", 950, 800);
 
             if (ruch == BIALY)
                 graphics.drawImage(Assets.player1, 1100, 766, 64, 64, null);
             else if (ruch == CZARNY)
                 graphics.drawImage(Assets.player2, 1100, 766, 64, 64, null);
 
-            if(wybranyPionek!=null)
-                graphics.drawString("Wybrany pionek: " + wybranyPionek.alpha+wybranyPionek.number, 950, 900);
 
+            if (wybranyPionek != null) {
+                graphics.drawString("Wybrany pionek: " + wybranyPionek.alpha + wybranyPionek.number, 920, 860);
+                graphics.drawString("Dostępni sąsiedzi: ", 920, 890);
+                graphics.drawString(wybranyPionek.dajSasiadow(), 920, 920);
+
+            }
         }
 
         bufferStrategy.show();
@@ -295,8 +419,68 @@ public class Game implements Runnable {
                 } else if (p.zajetePrzez == CZARNY) {
                     graphics.drawImage(Assets.player2, x, y, 64, 64, null);
                 }
+                if (wybranyPionek == p) {
+//                    if(wybranyPionek.zajetePrzez==BIALY){
+                    if ((ruch == BIALY && liczbaPionkowBIALY == 3) || (ruch == CZARNY && liczbaPionkowCZARNY == 3)) {
+                        for (Pole f : board) {
+                            if (f.czyWolne) {
+                                if (ruch == BIALY) {
+                                    if (f.number != ostatniePoleBialego.number && !f.alpha.equals(ostatniePoleBialego.alpha)) {
+                                        int alpha = 127; // 50% transparent
+                                        Color myColour = new Color(255, 200, 100, alpha);
+                                        graphics.setColor(myColour);
+                                        graphics.fillRect(f.x1, f.y1, 64, 64);
+                                        graphics.setColor(Color.BLACK);
+                                        graphics.drawRect(f.x1, f.y1, 64, 64);
 
+                                    }
+                                } else if (ruch == CZARNY) {
+                                    if (f.number != ostatniePoleCzarnego.number && !f.alpha.equals(ostatniePoleCzarnego.alpha)) {
+                                        int alpha = 127; // 50% transparent
+                                        Color myColour = new Color(255, 200, 100, alpha);
+                                        graphics.setColor(myColour);
+                                        graphics.fillRect(f.x1, f.y1, 64, 64);
+                                        graphics.setColor(Color.BLACK);
+                                        graphics.drawRect(f.x1, f.y1, 64, 64);
+
+                                    }
+                                }
+                            }
+
+                        }
+                    } else {
+                        for (Pole f : wybranyPionek.sasiedzi) {
+                            if (f.czyWolne) {
+                                if (ruch == BIALY) {
+                                    if (f.number != ostatniePoleBialego.number && !f.alpha.equals(ostatniePoleBialego.alpha)) {
+                                        int alpha = 127; // 50% transparent
+                                        Color myColour = new Color(255, 200, 100, alpha);
+                                        graphics.setColor(myColour);
+                                        graphics.fillRect(f.x1, f.y1, 64, 64);
+                                        graphics.setColor(Color.BLACK);
+                                        graphics.drawRect(f.x1, f.y1, 64, 64);
+                                    }
+                                } else if (ruch == CZARNY) {
+                                    if (f.number != ostatniePoleCzarnego.number && !f.alpha.equals(ostatniePoleCzarnego.alpha)) {
+                                        int alpha = 127; // 50% transparent
+                                        Color myColour = new Color(255, 200, 100, alpha);
+                                        graphics.setColor(myColour);
+                                        graphics.fillRect(f.x1, f.y1, 64, 64);
+                                        graphics.setColor(Color.BLACK);
+                                        graphics.drawRect(f.x1, f.y1, 64, 64);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
+        }
+        if (currentState.getClass() == EndgameState.class) {
+            Font font = new Font("", Font.BOLD, 100);
+            graphics.setFont(font);
+            graphics.drawString("KONIEC GRY", 100, 400);
+            graphics.drawString("WYGRAŁ " + ktoWygral, 100, 600);
         }
     }
 
@@ -305,41 +489,138 @@ public class Game implements Runnable {
         keyManager.update();
         if (currentState.getClass() != MenuState.class)
             if (mouseManager.isLeftPressed()) {
-                //System.out.println(mouseManager.getMouseX() + ":" + mouseManager.getMouseY());
-                if (ruch == BIALY) {
-                    if (liczbaPionkowDoRozstawieniaBIALY > 0)
-                        postawPionek(BIALY, mouseManager.getMouseX(), mouseManager.getMouseY());
-                    else {
+
+                if (czyBialyZbija || czyCzarnyZbija) {
+                    if (czyBialyZbija) {
+                        for (int i = 0; i < ileBialyZbija; ) {
+                            Pole zaznaczonyPionek = polePodXY(mouseManager.getMouseX(), mouseManager.getMouseY());
+                            if (zaznaczonyPionek != null) {
+                                if (zaznaczonyPionek.zajetePrzez == CZARNY) {
+                                    zaznaczonyPionek.zajetePrzez = null;
+                                    zaznaczonyPionek.czyWolne = true;
+                                    czyBialyZbija = false;
+                                    liczbaPionkowCZARNY -= 1;
+                                    ruch = CZARNY;
+                                    i++;
+                                }
+                            }
+                        }
+                    } else if (czyCzarnyZbija) {
+                        for (int i = 0; i < ileCzarnyZbija; ) {
+                            Pole zaznaczonyPionek = polePodXY(mouseManager.getMouseX(), mouseManager.getMouseY());
+                            if (zaznaczonyPionek != null) {
+                                if (zaznaczonyPionek.zajetePrzez == BIALY) {
+                                    zaznaczonyPionek.zajetePrzez = null;
+                                    zaznaczonyPionek.czyWolne = true;
+                                    czyCzarnyZbija = false;
+                                    liczbaPionkowBIALY -= 1;
+                                    ruch = BIALY;
+                                    i++;
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    if (liczbaPionkowDoRozstawieniaBIALY > 0 && ruch == BIALY) { //rozstawianie białych
+//                        postawPionek(BIALY, mouseManager.getMouseX(), mouseManager.getMouseY());
                         Pole zaznaczonyPionek = polePodXY(mouseManager.getMouseX(), mouseManager.getMouseY());
-                        if (zaznaczonyPionek != null)
-                            if (wybranyPionek != null)
-                            {
-                                if (zaznaczonyPionek == wybranyPionek && czyWybral) {
+                        if (zaznaczonyPionek != null && zaznaczonyPionek.czyWolne) {
+                            zaznaczonyPionek.czyWolne = false;
+                            zaznaczonyPionek.zajetePrzez = BIALY;
+                            liczbaPionkowDoRozstawieniaBIALY -= 1;
+                            liczbaPionkowBIALY += 1;
+                            aktywujMlynki(zaznaczonyPionek);
+                            if (!czyBialyZbija)
+                                ruch = CZARNY;
+                        }
+
+
+                    } else if (liczbaPionkowDoRozstawieniaCZARNY > 0 && ruch == CZARNY) { //rozstawianie czarnych
+//                        postawPionek(CZARNY, mouseManager.getMouseX(), mouseManager.getMouseY());
+                        Pole zaznaczonyPionek = polePodXY(mouseManager.getMouseX(), mouseManager.getMouseY());
+                        if (zaznaczonyPionek != null && zaznaczonyPionek.czyWolne) {
+                            zaznaczonyPionek.czyWolne = false;
+                            zaznaczonyPionek.zajetePrzez = CZARNY;
+                            liczbaPionkowDoRozstawieniaCZARNY -= 1;
+                            liczbaPionkowCZARNY += 1;
+                            aktywujMlynki(zaznaczonyPionek);
+                            if (!czyCzarnyZbija)
+                                ruch = BIALY;
+                        }
+                    } else {
+                        Pole zaznaczonyPionek = polePodXY(mouseManager.getMouseX(), mouseManager.getMouseY());
+                        if (zaznaczonyPionek != null) {
+                            if (wybranyPionek != null) {
+                                if (zaznaczonyPionek == wybranyPionek) { // odznaczenie pionka
                                     wybranyPionek.czyWybrany = false;
                                     czyWybral = false;
                                     wybranyPionek = null;
+                                } else if (zaznaczonyPionek.czyWolne) { //ruch
+                                    if ((ruch == BIALY && liczbaPionkowBIALY == 3) || (ruch == CZARNY && liczbaPionkowCZARNY == 3) || wybranyPionek.czyPodanePoleJestSasiadem(zaznaczonyPionek)) {
+                                        wybranyPionek.czyWolne = true;
+                                        wybranyPionek.czyWybrany = false;
+                                        wybranyPionek.zajetePrzez = null;
+                                        wybranyPionek = null;
+                                        zaznaczonyPionek.czyWolne = false;
+                                        zaznaczonyPionek.zajetePrzez = ruch;
+                                        aktywujMlynki(zaznaczonyPionek);
+                                        if (czyCzarnyZbija || czyBialyZbija) {
+
+                                        } else {
+                                            if (ruch == BIALY)
+                                                ruch = CZARNY;
+                                            else
+                                                ruch = BIALY;
+                                        }
+                                    }
                                 }
+                            } else if (zaznaczonyPionek.zajetePrzez == ruch) { //zaznaczenie pionka
+                                czyWybral = true;
+                                wybranyPionek = zaznaczonyPionek;
+                                wybranyPionek.czyWybrany = true;
+                            }
                         }
-                        else if (zaznaczonyPionek != null && zaznaczonyPionek.zajetePrzez == BIALY && !czyWybral) {
-                            czyWybral = true;
-                            wybranyPionek = zaznaczonyPionek;
-                            wybranyPionek.czyWybrany = true;
-                        }
-
                     }
-                } else {
-                    if (liczbaPionkowDoRozstawieniaCZARNY > 0)
-                        postawPionek(CZARNY, mouseManager.getMouseX(), mouseManager.getMouseY());
-                    else {
 
-                    }
+
+                    //delay
+
                 }
-                //delay
-                timeHelper=System.currentTimeMillis();
-                while(System.currentTimeMillis()-timeHelper<opoznienie){
+                if (liczbaPionkowCZARNY < 3 && liczbaPionkowDoRozstawieniaCZARNY == 0) {
+                    ktoWygral = BIALY;
+                    EndgameState endgameState = new EndgameState(handler);
+                    setCurrentState(endgameState);
+                } else if (liczbaPionkowBIALY < 3 && liczbaPionkowDoRozstawieniaBIALY == 0) {
+                    ktoWygral = BIALY;
+                    EndgameState endgameState = new EndgameState(handler);
+                    setCurrentState(endgameState);
+                }
+
+                timeHelper = System.currentTimeMillis();
+                while (System.currentTimeMillis() - timeHelper < opoznienie) {
 
                 }
             }
+    }
+
+
+    private void aktywujMlynki(Pole pole) {
+        ileBialyZbija=0;
+        ileCzarnyZbija=0;
+        for (Mlynek mlynek : mlynki) {
+            if (mlynek.czyZawieraPole(pole)) {
+                if (mlynek.czyMlynek()) {
+                    mlynek.czyAktywny = true;
+                    if (pole.zajetePrzez == BIALY) {
+                        czyBialyZbija = true;
+                        ileBialyZbija += 1;
+                    } else if (pole.zajetePrzez == CZARNY) {
+                        czyCzarnyZbija = true;
+                        ileCzarnyZbija += 1;
+                    }
+                }
+            }
+        }
     }
 
     private void wstawPionek(Gracz gracz, String alpha, int number) {
@@ -350,12 +631,16 @@ public class Game implements Runnable {
                 pole.zajetePrzez = gracz;
                 if (gracz == BIALY) {
                     ruch = CZARNY;
-                    if (liczbaPionkowDoRozstawieniaBIALY > 0)
+                    if (liczbaPionkowDoRozstawieniaBIALY > 0) {
                         liczbaPionkowDoRozstawieniaBIALY -= 1;
+                        liczbaPionkowBIALY += 1;
+                    }
                 } else if (gracz == CZARNY) {
                     ruch = BIALY;
-                    if (liczbaPionkowDoRozstawieniaCZARNY > 0)
+                    if (liczbaPionkowDoRozstawieniaCZARNY > 0) {
                         liczbaPionkowDoRozstawieniaCZARNY -= 1;
+                        liczbaPionkowCZARNY += 1;
+                    }
                 }
             }
 
@@ -371,12 +656,16 @@ public class Game implements Runnable {
                 pole.zajetePrzez = gracz;
                 if (gracz == BIALY) {
                     ruch = CZARNY;
-                    if (liczbaPionkowDoRozstawieniaBIALY > 0)
+                    if (liczbaPionkowDoRozstawieniaBIALY > 0) {
                         liczbaPionkowDoRozstawieniaBIALY -= 1;
+                        liczbaPionkowBIALY += 1;
+                    }
                 } else if (gracz == CZARNY) {
                     ruch = BIALY;
-                    if (liczbaPionkowDoRozstawieniaCZARNY > 0)
+                    if (liczbaPionkowDoRozstawieniaCZARNY > 0) {
                         liczbaPionkowDoRozstawieniaCZARNY -= 1;
+                        liczbaPionkowCZARNY += 1;
+                    }
                 }
             }
 
