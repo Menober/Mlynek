@@ -40,4 +40,12 @@ public class Pole {
         }
         return tekst;
     }
+
+    public boolean czyToToSamoPole(Pole pole){
+        return pole.number==this.number&&this.alpha.equals(pole.alpha);
+    }
+
+    public String pozycja() {
+        return alpha+number;
+    }
 }
