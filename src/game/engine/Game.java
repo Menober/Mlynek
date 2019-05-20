@@ -8,9 +8,11 @@ import game.states.EndgameState;
 import game.states.GameState;
 import game.states.MenuState;
 import game.states.State;
+import javafx.util.Pair;
 
 import java.awt.*;
 import java.awt.image.BufferStrategy;
+import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 
@@ -39,7 +41,7 @@ public class Game implements Runnable {
     long czasOdStartu;
     Pole wybranyPionek;
     boolean czyWybral;
-    long opoznienie = 200;
+    long opoznienie = 300;
     long timeHelper;
     boolean czyCzarnyZbija = false;
     boolean czyBialyZbija = false;
@@ -52,6 +54,10 @@ public class Game implements Runnable {
     Pole blokowanyCzarnyPionek = new Pole("test", 0);
     int liczbaRuchowBialego = 0;
     int liczbaRuchowCzarnego = 0;
+    boolean czyCzarnyAI = true;
+    boolean czyBialyAI = false;
+    Ruch ruchCzarnego = null;
+    Ruch ruchBialego = null;
 
 
     Game(Handler handler) {
@@ -59,184 +65,6 @@ public class Game implements Runnable {
         keyManager = new KeyManager();
         mouseManager = new MouseManager();
         handler.setKeyManager(keyManager);
-    }
-
-    private void init() {
-        display = new Display(handler.getTitle(), handler.getWidth(), handler.getHeight());
-        display.getFrame().addKeyListener(keyManager);
-        display.getFrame().addMouseListener(mouseManager);
-        display.getCanvas().addMouseListener(mouseManager);
-        tankColor = 0;
-        Assets.init();
-        currentState = new MenuState(handler);
-
-        Pole A1 = new Pole("A", 1);
-        Pole A4 = new Pole("A", 4);
-        Pole A7 = new Pole("A", 7);
-
-        Pole B2 = new Pole("B", 2);
-        Pole B4 = new Pole("B", 4);
-        Pole B6 = new Pole("B", 6);
-
-        Pole C3 = new Pole("C", 3);
-        Pole C4 = new Pole("C", 4);
-        Pole C5 = new Pole("C", 5);
-
-        Pole D1 = new Pole("D", 1);
-        Pole D2 = new Pole("D", 2);
-        Pole D3 = new Pole("D", 3);
-        Pole D5 = new Pole("D", 5);
-        Pole D6 = new Pole("D", 6);
-        Pole D7 = new Pole("D", 7);
-
-        Pole E3 = new Pole("E", 3);
-        Pole E4 = new Pole("E", 4);
-        Pole E5 = new Pole("E", 5);
-
-        Pole F2 = new Pole("F", 2);
-        Pole F4 = new Pole("F", 4);
-        Pole F6 = new Pole("F", 6);
-
-        Pole G1 = new Pole("G", 1);
-        Pole G4 = new Pole("G", 4);
-        Pole G7 = new Pole("G", 7);
-
-        A1.sasiedzi.add(A4);
-        A1.sasiedzi.add(D1);
-
-        A4.sasiedzi.add(A1);
-        A4.sasiedzi.add(A7);
-        A4.sasiedzi.add(B4);
-
-        A7.sasiedzi.add(A4);
-        A7.sasiedzi.add(D7);
-
-        B2.sasiedzi.add(D2);
-        B2.sasiedzi.add(B4);
-
-        B4.sasiedzi.add(A4);
-        B4.sasiedzi.add(B2);
-        B4.sasiedzi.add(B6);
-        B4.sasiedzi.add(C4);
-
-        B6.sasiedzi.add(B4);
-        B6.sasiedzi.add(D6);
-
-        C3.sasiedzi.add(C4);
-        C3.sasiedzi.add(D3);
-
-        C4.sasiedzi.add(B4);
-        C4.sasiedzi.add(C3);
-        C4.sasiedzi.add(C5);
-
-        C5.sasiedzi.add(C4);
-        C5.sasiedzi.add(D5);
-
-        D1.sasiedzi.add(A1);
-        D1.sasiedzi.add(G1);
-        D1.sasiedzi.add(D2);
-
-        D2.sasiedzi.add(B2);
-        D2.sasiedzi.add(D1);
-        D2.sasiedzi.add(D3);
-        D2.sasiedzi.add(F2);
-
-        D3.sasiedzi.add(C3);
-        D3.sasiedzi.add(D2);
-        D3.sasiedzi.add(E3);
-
-        D5.sasiedzi.add(C5);
-        D5.sasiedzi.add(D6);
-        D5.sasiedzi.add(E5);
-
-        D6.sasiedzi.add(B6);
-        D6.sasiedzi.add(D5);
-        D6.sasiedzi.add(D7);
-        D6.sasiedzi.add(F6);
-
-        D7.sasiedzi.add(A7);
-        D7.sasiedzi.add(D6);
-        D7.sasiedzi.add(G7);
-
-        E3.sasiedzi.add(D3);
-        E3.sasiedzi.add(E4);
-
-        E4.sasiedzi.add(E3);
-        E4.sasiedzi.add(E5);
-        E4.sasiedzi.add(F4);
-
-        E5.sasiedzi.add(D5);
-        E5.sasiedzi.add(E4);
-
-        F2.sasiedzi.add(D2);
-        F2.sasiedzi.add(F4);
-
-        F4.sasiedzi.add(E4);
-        F4.sasiedzi.add(F2);
-        F4.sasiedzi.add(F6);
-        F4.sasiedzi.add(G4);
-
-        F6.sasiedzi.add(D6);
-        F6.sasiedzi.add(F4);
-
-        G1.sasiedzi.add(D1);
-        G1.sasiedzi.add(G4);
-
-        G4.sasiedzi.add(F4);
-        G4.sasiedzi.add(G1);
-        G4.sasiedzi.add(G7);
-
-        G7.sasiedzi.add(D7);
-        G7.sasiedzi.add(G4);
-
-        mlynki.add(new Mlynek(A1, A4, A7));
-        mlynki.add(new Mlynek(B2, B4, B6));
-        mlynki.add(new Mlynek(C3, C4, C5));
-        mlynki.add(new Mlynek(D1, D2, D3));
-        mlynki.add(new Mlynek(D5, D6, D7));
-        mlynki.add(new Mlynek(E3, E4, E5));
-        mlynki.add(new Mlynek(F2, F4, F6));
-        mlynki.add(new Mlynek(G1, G4, G7));
-
-        mlynki.add(new Mlynek(A1, D1, G1));
-        mlynki.add(new Mlynek(B2, D2, F2));
-        mlynki.add(new Mlynek(C3, D3, E3));
-        mlynki.add(new Mlynek(A4, B4, C4));
-        mlynki.add(new Mlynek(E4, F4, G4));
-        mlynki.add(new Mlynek(C5, D5, E5));
-        mlynki.add(new Mlynek(B6, D6, F6));
-        mlynki.add(new Mlynek(A7, D7, G7));
-
-
-        board.add(A1);
-        board.add(A4);
-        board.add(A7);
-        board.add(B2);
-        board.add(B4);
-        board.add(B6);
-        board.add(C3);
-        board.add(C4);
-        board.add(C5);
-        board.add(D1);
-        board.add(D2);
-        board.add(D3);
-        board.add(D5);
-        board.add(D6);
-        board.add(D7);
-        board.add(E3);
-        board.add(E4);
-        board.add(E5);
-        board.add(F2);
-        board.add(F4);
-        board.add(F6);
-        board.add(G1);
-        board.add(G4);
-        board.add(G7);
-
-        dopasujPozycje();
-        czasOdStartu = System.currentTimeMillis();
-        //  wypelnijPola();
-        //  rozdajPionki();
     }
 
     private void rozdajPionki() {
@@ -345,6 +173,8 @@ public class Game implements Runnable {
             graphics.drawString("Ruch gracza:", 950, 800);
             graphics.drawString("zakazane pole białego:" + ostatniePoleBialego.pozycja() + " dla pionka:" + blokowanyBialyPionek.pozycja(), 450, 920);
             graphics.drawString("zakazane pole czarnego:" + ostatniePoleCzarnego.pozycja() + " dla pionka:" + blokowanyCzarnyPionek.pozycja(), 450, 950);
+            graphics.drawString("Liczba dostępnych ruchów:" + liczbaDostepnychRuchowDlaPola(wybranyPionek), 450, 975);
+            graphics.drawString("Aktualne punkty za młynki:" + policzPunktyZaMlynki(ruch), 10, 920);
 
             if (ruch == BIALY)
                 graphics.drawImage(Assets.player1, 1100, 766, 64, 64, null);
@@ -492,10 +322,198 @@ public class Game implements Runnable {
         graphics.drawRect(f.x1, f.y1, 64, 64);
     }
 
+
+    private void minmax(Gracz gracz) {
+        Ruch max=new Ruch();
+        max.liczbaPunktowPoRuchu=-10000;
+        if (gracz == CZARNY) {
+            ArrayList<Ruch> dostepneRuchy = coMozeZrobic(gracz);
+            for (Ruch r : dostepneRuchy) {
+                if(r.liczbaPunktowPoRuchu>max.liczbaPunktowPoRuchu)
+                    max=r;
+                System.out.println(CZARNY + ":" + r.rodzajRuchu + ":" + r.skad.pozycja() + ":" + r.dokad.pozycja()+":PKT:"+r.liczbaPunktowPoRuchu);
+            }
+            ruchCzarnego = max;
+        }else if (gracz == BIALY) {
+            ArrayList<Ruch> dostepneRuchy = coMozeZrobic(gracz);
+            for (Ruch r : dostepneRuchy) {
+                if(r.liczbaPunktowPoRuchu>max.liczbaPunktowPoRuchu)
+                    max=r;
+                //  System.out.println(BIALY+":"+r.rodzajRuchu + ":" + r.skad.pozycja() + ":" + r.dokad.pozycja());
+            }
+            ruchBialego = max;
+        }
+    }
+
+    private ArrayList<Ruch> coMozeZrobic(Gracz gracz) {
+        ArrayList<Ruch> ruchy = new ArrayList<>();
+        if (gracz == CZARNY) { //CZARNY
+            if (liczbaPionkowDoRozstawieniaCZARNY > 0) { //rozstawianie
+                for (Pole pole : board) {
+                    if (pole.czyWolne) {
+                        Ruch r = new Ruch();
+                        r.gracz = CZARNY;
+                        r.rodzajRuchu = "postaw";
+                        r.skad = new Pole("", 0);
+                        r.dokad = pole.copy();
+                        r.stanGry = stanGryPoRuchu(r);
+                        r.liczbaPunktowPoRuchu = r.stanGry.punktyCzarnego;
+                        ruchy.add(r);
+                    }
+                }
+            } else if (liczbaPionkowCZARNY > 3) {//przesuwanie po sasiadach
+                for (Pole pole : board) {
+                    if (pole.zajetePrzez == CZARNY) {
+                        ArrayList<Pole> dostepnePola = dostepneSasiady(pole);
+                        for (Pole p : dostepnePola) {
+                            Ruch r = new Ruch();
+                            r.gracz = CZARNY;
+                            r.rodzajRuchu = "rusz";
+                            r.skad = pole.copy();
+                            r.dokad = p.copy();
+                            r.stanGry = stanGryPoRuchu(r);
+                            r.liczbaPunktowPoRuchu = r.stanGry.punktyCzarnego;
+                            ruchy.add(r);
+                        }
+                    }
+                }
+            } else if (liczbaPionkowCZARNY == 3) { //poruszanie CZARNEGO po całej planszy
+                for (Pole poleGracza : board) {
+                    if (poleGracza.zajetePrzez == CZARNY) {
+                        for (Pole poleWolne : board) {
+                            if (poleWolne.czyWolne) {
+                                if (!czyToCofanie(poleGracza,poleWolne)) {
+                                    Ruch r = new Ruch();
+                                    r.gracz = CZARNY;
+                                    r.rodzajRuchu = "rusz";
+                                    r.skad = poleGracza.copy();
+                                    r.dokad = poleWolne.copy();
+                                    r.stanGry = stanGryPoRuchu(r);
+                                    r.liczbaPunktowPoRuchu = r.stanGry.punktyCzarnego;
+                                    ruchy.add(r);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } else if (gracz == BIALY) { //BIALY
+            if (liczbaPionkowDoRozstawieniaBIALY > 0) { //rozstawianie
+                for (Pole pole : board) {
+                    if (pole.czyWolne) {
+                        Ruch r = new Ruch();
+                        r.gracz = BIALY;
+                        r.rodzajRuchu = "postaw";
+                        r.skad = new Pole("", 0);
+                        r.dokad = pole.copy();
+                        r.stanGry = stanGryPoRuchu(r);
+                        r.liczbaPunktowPoRuchu = r.stanGry.punktyCzarnego;
+                        ruchy.add(r);
+                    }
+                }
+            } else if (liczbaPionkowBIALY > 3) {//przesuwanie po sasiadach
+                for (Pole pole : board) {
+                    if (pole.zajetePrzez == BIALY) {
+                        ArrayList<Pole> dostepnePola = dostepneSasiady(pole);
+                        for (Pole p : dostepnePola) {
+                            Ruch r = new Ruch();
+                            r.gracz = BIALY;
+                            r.rodzajRuchu = "rusz";
+                            r.skad = pole.copy();
+                            r.dokad = p.copy();
+                            r.stanGry = stanGryPoRuchu(r);
+                            r.liczbaPunktowPoRuchu = r.stanGry.punktyCzarnego;
+                            ruchy.add(r);
+                        }
+                    }
+                }
+            } else if (liczbaPionkowBIALY == 3) { //poruszanie BIALEGO po całej planszy
+                for (Pole poleGracza : board) {
+                    if (poleGracza.zajetePrzez == BIALY) {
+                        for (Pole poleWolne : board) {
+                            if (poleWolne.czyWolne) {
+                                Ruch r = new Ruch();
+                                r.gracz = BIALY;
+                                r.rodzajRuchu = "rusz";
+                                r.skad = poleGracza.copy();
+                                r.dokad = poleWolne.copy();
+                                r.stanGry = stanGryPoRuchu(r);
+                                r.liczbaPunktowPoRuchu = r.stanGry.punktyCzarnego;
+                                ruchy.add(r);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return ruchy;
+    }
+
+    private boolean czyToCofanie(Pole poleGracza, Pole poleWolne) {
+        if(poleGracza.zajetePrzez==CZARNY){
+            if(poleGracza.czyToToSamoPole(blokowanyCzarnyPionek)){
+                if(poleWolne.czyToToSamoPole(ostatniePoleCzarnego))
+                    return true;
+            }
+            return false;
+        }else if(poleGracza.zajetePrzez==BIALY){
+            if(poleGracza.czyToToSamoPole(blokowanyBialyPionek)){
+                if(poleWolne.czyToToSamoPole(ostatniePoleBialego))
+                    return true;
+            }
+            return false;
+        }
+        return false;
+    }
+
+    private ArrayList<Pole> dostepneSasiady(Pole pole) {
+        ArrayList<Pole> dostepne = new ArrayList<>();
+        for (Pole p : pole.sasiedzi) {
+            if (p.czyWolne) {
+                if (pole.zajetePrzez == CZARNY) { //blokowanie cofania czarnego
+                    if (pole.czyToToSamoPole(blokowanyCzarnyPionek)) {
+                        if (!p.czyToToSamoPole(ostatniePoleCzarnego))
+                            dostepne.add(p);
+                    } else {
+                        dostepne.add(p);
+                    }
+                } else if (pole.zajetePrzez == BIALY) { //blokowanie cofania bialego
+                    if (pole.czyToToSamoPole(blokowanyBialyPionek)) {
+                        if (!p.czyToToSamoPole(ostatniePoleBialego))
+                            dostepne.add(p);
+                    } else {
+                        dostepne.add(p);
+                    }
+                }
+            }
+        }
+        return dostepne;
+
+    }
+
+    private StanGry stanGryPoRuchu(Ruch r) {
+        StanGry stan = new StanGry();
+        stan.board = new ArrayList<>();
+        for (Pole p : board) {
+            stan.board.add(p.copy());
+        }
+        for(Mlynek m:mlynki)
+            stan.mlynki.add(m.copy());
+
+
+        stan.wykonajRuch(r,r.gracz);
+        stan.punktyCzarnego=stan.policzPunktyZaMlynki(CZARNY,stan.board);
+        stan.punktyBialego=stan.policzPunktyZaMlynki(BIALY,stan.board);
+
+
+        return stan;
+    }
+
     private void update() {
         currentState.update();
         keyManager.update();
-        if (currentState.getClass() != MenuState.class)
+        if (currentState.getClass() != MenuState.class) {
+
             if (mouseManager.isLeftPressed()) {
 
                 if (czyBialyZbija || czyCzarnyZbija) { //zbijanie
@@ -534,6 +552,7 @@ public class Game implements Runnable {
                     }
                 } else {
                     if (liczbaPionkowDoRozstawieniaBIALY > 0 && ruch == BIALY) { //rozstawianie białych
+                        timeHelper=System.currentTimeMillis();//todel
 //                        postawPionek(BIALY, mouseManager.getMouseX(), mouseManager.getMouseY());
                         Pole kliknietePole = polePodXY(mouseManager.getMouseX(), mouseManager.getMouseY());
                         if (kliknietePole != null && kliknietePole.czyWolne) {
@@ -550,6 +569,7 @@ public class Game implements Runnable {
 
 
                     } else if (liczbaPionkowDoRozstawieniaCZARNY > 0 && ruch == CZARNY) { //rozstawianie czarnych
+                        timeHelper=System.currentTimeMillis();//todel
 //                        postawPionek(CZARNY, mouseManager.getMouseX(), mouseManager.getMouseY());
                         Pole kliknietePole = polePodXY(mouseManager.getMouseX(), mouseManager.getMouseY());
                         if (kliknietePole != null && kliknietePole.czyWolne) {
@@ -567,7 +587,9 @@ public class Game implements Runnable {
                         Pole kliknietePole = polePodXY(mouseManager.getMouseX(), mouseManager.getMouseY());
                         if (kliknietePole != null) {
                             if (wybranyPionek != null) {
-                                if (kliknietePole == wybranyPionek) { // odznaczenie pionka
+                                if (kliknietePole == wybranyPionek &&System.currentTimeMillis() - timeHelper > opoznienie) { // odznaczenie pionka
+                                    timeHelper=System.currentTimeMillis();//todel
+
                                     wybranyPionek.czyWybrany = false;
                                     czyWybral = false;
                                     wybranyPionek = null;
@@ -595,8 +617,9 @@ public class Game implements Runnable {
                                                     liczbaRuchowBialego += 1;
                                                 }
                                             }
-                                        }
+                                        }timeHelper=System.currentTimeMillis();//todel
                                     } else if (ruch == CZARNY) {
+                                        timeHelper=System.currentTimeMillis();//todel
                                         if (liczbaPionkowCZARNY == 3) { //poruszanie po całej planszy
                                             if (wybranyPionek.czyToToSamoPole(blokowanyCzarnyPionek) && kliknietePole.czyToToSamoPole(ostatniePoleCzarnego)) {
                                             } else {
@@ -624,7 +647,10 @@ public class Game implements Runnable {
 
                                 }
 
-                            } else if (kliknietePole.zajetePrzez == ruch) { //zaznaczenie pionka
+                            } else if (kliknietePole.zajetePrzez == ruch&&System.currentTimeMillis() - timeHelper > opoznienie) { //zaznaczenie pionka
+                                timeHelper = System.currentTimeMillis(); //TODO
+
+
                                 czyWybral = true;
                                 wybranyPionek = kliknietePole;
                                 wybranyPionek.czyWybrany = true;
@@ -648,13 +674,127 @@ public class Game implements Runnable {
                     setCurrentState(endgameState);
                 }
 
-                timeHelper = System.currentTimeMillis();
-                while (System.currentTimeMillis() - timeHelper < opoznienie) {
+//                timeHelper = System.currentTimeMillis();
+//                while (System.currentTimeMillis() - timeHelper < opoznienie) {
+//
+//                }
+            }
 
+            if (ruch == CZARNY) {//estymacja ruchu
+                minmax(CZARNY);
+            }
+            if (ruch == BIALY) {//estymacja ruchu
+                minmax(BIALY);
+            }
+
+            if (czyCzarnyAI && ruch == CZARNY) {
+                wykonajRuch(ruchCzarnego,ruch);
+                ruchCzarnego=null;
+
+            }else if(czyBialyAI&&ruch == BIALY) {
+                wykonajRuch(ruchBialego, ruch);
+                ruchBialego = null;
+
+            }
+
+        }
+    }
+
+    private void wykonajRuch(Ruch r,Gracz ruch) {
+        if (ruch == CZARNY && r != null) {//CZARNY
+            if (r.rodzajRuchu.equals("postaw")) {
+                log("AI:Czarny wstawia pionek na:" + r.dokad.pozycja());
+                wstawPionek(CZARNY, r.dokad.alpha, r.dokad.number);
+            } else if (r.rodzajRuchu.equals("rusz")) {
+                Pole tmp = polePodAlphaNumber(r.skad.alpha, r.skad.number);
+                ostatniePoleCzarnego = new Pole(tmp, false);
+                log("AI:Czarny rusza pionek z:" + r.skad.pozycja() + " na:" + r.dokad.pozycja());
+                zwolnijPole(tmp);
+                wstawPionek(CZARNY, r.dokad.alpha, r.dokad.number);
+                blokowanyCzarnyPionek = polePodAlphaNumber(r.dokad.alpha, r.dokad.number);
+            }
+
+        } else if (ruch == BIALY && r != null) {//BIALY
+            if (r.rodzajRuchu.equals("postaw")) {
+                wstawPionek(BIALY, r.dokad.alpha, r.dokad.number);
+                r = r.nastepnyRuch;
+            } else if (r.rodzajRuchu.equals("rusz")) {
+                Pole tmp = polePodAlphaNumber(r.skad.alpha, r.skad.number);
+                ostatniePoleBialego = new Pole(tmp, false);
+                log("AI:Bialy rusza pionek z:" + r.skad.pozycja() + " na:" + r.dokad.pozycja());
+                zwolnijPole(tmp);
+                wstawPionek(BIALY, r.dokad.alpha, r.dokad.number);
+                blokowanyBialyPionek = polePodAlphaNumber(r.dokad.alpha, r.dokad.number);
+                r = r.nastepnyRuch;
+            }
+        }
+    }
+
+    private void zwolnijPole(Pole tmp) {
+        tmp.zajetePrzez = null;
+        tmp.czyWolne = true;
+        tmp.czyWybrany = false;
+    }
+
+    private int policzPunktyZaMlynki(Gracz gracz) {
+        int liczbaPunktow = 0;
+        for (Mlynek m : mlynki) {
+            liczbaPunktow += m.ilePunktowZaMlynek(gracz);
+        }
+        return liczbaPunktow;
+    }
+
+    private int policzLiczbeRuchowGracza(Gracz gracz) {
+        int liczbaRuchow = 0;
+        ArrayList<Pole> polaGracza = polaGracza(gracz);
+        for (Pole pole : polaGracza) {
+            liczbaRuchow += liczbaDostepnychRuchowDlaPola(pole);
+
+
+        }
+
+        return liczbaRuchow;
+    }
+
+    private int liczbaDostepnychRuchowDlaPola(Pole pole) {
+        int liczba = 0;
+        if (pole != null)
+            for (Pole sasiad : pole.sasiedzi) {
+                if (sasiad.czyWolne) {
+                    if (pole.zajetePrzez == BIALY) {
+                        if (blokowanyBialyPionek.czyToToSamoPole(pole)) {
+                            if (!sasiad.czyToToSamoPole(ostatniePoleBialego)) {
+                                liczba++;
+                            }
+                        } else {
+                            liczba++;
+                        }
+                    } else if (pole.zajetePrzez == CZARNY) {
+                        if (blokowanyCzarnyPionek.czyToToSamoPole(pole)) {
+                            if (!sasiad.czyToToSamoPole(ostatniePoleCzarnego)) {
+                                liczba++;
+                            }
+                        } else {
+                            liczba++;
+                        }
+                    }
                 }
             }
 
+
+        return liczba;
     }
+
+    private ArrayList polaGracza(Gracz gracz) {
+        ArrayList<Pole> pola = new ArrayList<>();
+        for (Pole pole : board) {
+            if (pole.zajetePrzez == gracz) {
+                pola.add(pole);
+            }
+        }
+        return pola;
+    }
+
 
     private void log(String log) {
         System.out.println(log);
@@ -662,9 +802,11 @@ public class Game implements Runnable {
 
     private void ruszPionek(Pole kliknietePole) {
         if (ruch == BIALY) { //logowanie
-            log("BIALY przesuwa pionek z:"+wybranyPionek.pozycja()+" na:"+kliknietePole.pozycja());
+            log("BIALY przesuwa pionek z:" + wybranyPionek.pozycja() + " na:" + kliknietePole.pozycja());
+            ruchBialego = ruchBialego.nastepnyRuch;
         } else if (ruch == CZARNY) {
-            log("CZARNY przesuwa pionek z:"+wybranyPionek.pozycja()+" na:"+kliknietePole.pozycja());
+            log("CZARNY przesuwa pionek z:" + wybranyPionek.pozycja() + " na:" + kliknietePole.pozycja());
+            ruchCzarnego = ruchCzarnego.nastepnyRuch;
         }
         wybranyPionek.czyWolne = true;
         wybranyPionek.czyWybrany = false;
@@ -846,5 +988,182 @@ public class Game implements Runnable {
 
     public static boolean between(int i, int minValueInclusive, int maxValueInclusive) {
         return (i >= minValueInclusive && i <= maxValueInclusive);
+    }
+    private void init() {
+        display = new Display(handler.getTitle(), handler.getWidth(), handler.getHeight());
+        display.getFrame().addKeyListener(keyManager);
+        display.getFrame().addMouseListener(mouseManager);
+        display.getCanvas().addMouseListener(mouseManager);
+        tankColor = 0;
+        Assets.init();
+        currentState = new MenuState(handler);
+
+        Pole A1 = new Pole("A", 1);
+        Pole A4 = new Pole("A", 4);
+        Pole A7 = new Pole("A", 7);
+
+        Pole B2 = new Pole("B", 2);
+        Pole B4 = new Pole("B", 4);
+        Pole B6 = new Pole("B", 6);
+
+        Pole C3 = new Pole("C", 3);
+        Pole C4 = new Pole("C", 4);
+        Pole C5 = new Pole("C", 5);
+
+        Pole D1 = new Pole("D", 1);
+        Pole D2 = new Pole("D", 2);
+        Pole D3 = new Pole("D", 3);
+        Pole D5 = new Pole("D", 5);
+        Pole D6 = new Pole("D", 6);
+        Pole D7 = new Pole("D", 7);
+
+        Pole E3 = new Pole("E", 3);
+        Pole E4 = new Pole("E", 4);
+        Pole E5 = new Pole("E", 5);
+
+        Pole F2 = new Pole("F", 2);
+        Pole F4 = new Pole("F", 4);
+        Pole F6 = new Pole("F", 6);
+
+        Pole G1 = new Pole("G", 1);
+        Pole G4 = new Pole("G", 4);
+        Pole G7 = new Pole("G", 7);
+
+        A1.sasiedzi.add(A4);
+        A1.sasiedzi.add(D1);
+
+        A4.sasiedzi.add(A1);
+        A4.sasiedzi.add(A7);
+        A4.sasiedzi.add(B4);
+
+        A7.sasiedzi.add(A4);
+        A7.sasiedzi.add(D7);
+
+        B2.sasiedzi.add(D2);
+        B2.sasiedzi.add(B4);
+
+        B4.sasiedzi.add(A4);
+        B4.sasiedzi.add(B2);
+        B4.sasiedzi.add(B6);
+        B4.sasiedzi.add(C4);
+
+        B6.sasiedzi.add(B4);
+        B6.sasiedzi.add(D6);
+
+        C3.sasiedzi.add(C4);
+        C3.sasiedzi.add(D3);
+
+        C4.sasiedzi.add(B4);
+        C4.sasiedzi.add(C3);
+        C4.sasiedzi.add(C5);
+
+        C5.sasiedzi.add(C4);
+        C5.sasiedzi.add(D5);
+
+        D1.sasiedzi.add(A1);
+        D1.sasiedzi.add(G1);
+        D1.sasiedzi.add(D2);
+
+        D2.sasiedzi.add(B2);
+        D2.sasiedzi.add(D1);
+        D2.sasiedzi.add(D3);
+        D2.sasiedzi.add(F2);
+
+        D3.sasiedzi.add(C3);
+        D3.sasiedzi.add(D2);
+        D3.sasiedzi.add(E3);
+
+        D5.sasiedzi.add(C5);
+        D5.sasiedzi.add(D6);
+        D5.sasiedzi.add(E5);
+
+        D6.sasiedzi.add(B6);
+        D6.sasiedzi.add(D5);
+        D6.sasiedzi.add(D7);
+        D6.sasiedzi.add(F6);
+
+        D7.sasiedzi.add(A7);
+        D7.sasiedzi.add(D6);
+        D7.sasiedzi.add(G7);
+
+        E3.sasiedzi.add(D3);
+        E3.sasiedzi.add(E4);
+
+        E4.sasiedzi.add(E3);
+        E4.sasiedzi.add(E5);
+        E4.sasiedzi.add(F4);
+
+        E5.sasiedzi.add(D5);
+        E5.sasiedzi.add(E4);
+
+        F2.sasiedzi.add(D2);
+        F2.sasiedzi.add(F4);
+
+        F4.sasiedzi.add(E4);
+        F4.sasiedzi.add(F2);
+        F4.sasiedzi.add(F6);
+        F4.sasiedzi.add(G4);
+
+        F6.sasiedzi.add(D6);
+        F6.sasiedzi.add(F4);
+
+        G1.sasiedzi.add(D1);
+        G1.sasiedzi.add(G4);
+
+        G4.sasiedzi.add(F4);
+        G4.sasiedzi.add(G1);
+        G4.sasiedzi.add(G7);
+
+        G7.sasiedzi.add(D7);
+        G7.sasiedzi.add(G4);
+
+        mlynki.add(new Mlynek(A1, A4, A7));
+        mlynki.add(new Mlynek(B2, B4, B6));
+        mlynki.add(new Mlynek(C3, C4, C5));
+        mlynki.add(new Mlynek(D1, D2, D3));
+        mlynki.add(new Mlynek(D5, D6, D7));
+        mlynki.add(new Mlynek(E3, E4, E5));
+        mlynki.add(new Mlynek(F2, F4, F6));
+        mlynki.add(new Mlynek(G1, G4, G7));
+
+        mlynki.add(new Mlynek(A1, D1, G1));
+        mlynki.add(new Mlynek(B2, D2, F2));
+        mlynki.add(new Mlynek(C3, D3, E3));
+        mlynki.add(new Mlynek(A4, B4, C4));
+        mlynki.add(new Mlynek(E4, F4, G4));
+        mlynki.add(new Mlynek(C5, D5, E5));
+        mlynki.add(new Mlynek(B6, D6, F6));
+        mlynki.add(new Mlynek(A7, D7, G7));
+
+
+        board.add(A1);
+        board.add(A4);
+        board.add(A7);
+        board.add(B2);
+        board.add(B4);
+        board.add(B6);
+        board.add(C3);
+        board.add(C4);
+        board.add(C5);
+        board.add(D1);
+        board.add(D2);
+        board.add(D3);
+        board.add(D5);
+        board.add(D6);
+        board.add(D7);
+        board.add(E3);
+        board.add(E4);
+        board.add(E5);
+        board.add(F2);
+        board.add(F4);
+        board.add(F6);
+        board.add(G1);
+        board.add(G4);
+        board.add(G7);
+
+        dopasujPozycje();
+        czasOdStartu = System.currentTimeMillis();
+        //  wypelnijPola();
+        //  rozdajPionki();
     }
 }

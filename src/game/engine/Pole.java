@@ -15,6 +15,27 @@ public class Pole {
         this.alpha = alpha;
         this.number = number;
     }
+    public Pole(Pole pole,boolean czyKopiowacSasiadow){
+        this.alpha=pole.alpha;
+        this.number=pole.number;
+        this.czyWolne=pole.czyWolne;
+        this.zajetePrzez=pole.zajetePrzez;
+        this.x1=pole.x1;
+        this.x2=pole.x2;
+        this.y2=pole.y2;
+        this.y1=pole.y1;
+        this.czyWybrany=pole.czyWybrany;
+        if(czyKopiowacSasiadow)
+            this.sasiedzi=kopiujSasiadow(pole);
+    }
+
+    private ArrayList<Pole> kopiujSasiadow(Pole pole) {
+        ArrayList<Pole> kopia=new ArrayList<>();
+        for(Pole p:pole.sasiedzi){
+            kopia.add(new Pole(p,false));
+        }
+        return kopia;
+    }
 
     public void setRect(int x1, int x2, int y1, int y2) {
         this.x1 = x1;
@@ -47,5 +68,9 @@ public class Pole {
 
     public String pozycja() {
         return alpha+number;
+    }
+
+    public Pole copy() {
+        return new Pole(this,true);
     }
 }
