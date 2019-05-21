@@ -49,12 +49,12 @@ public class MenuState extends State {
             g.drawImage(Assets.exit,50,310,null);
 
 
-        int tmpTankX=350,tmpTankY=210;
+        int tmpTankX=350,tmpTankY=180;
         switch(handler.getGame().tankColor){
-            case 0:g.drawImage(Assets.tankYellow[0],tmpTankX,tmpTankY,64,64,null);break;
-            case 1:g.drawImage(Assets.tankRed[0],tmpTankX,tmpTankY,64,64,null);break;
-            case 2:g.drawImage(Assets.tankGreen[0],tmpTankX,tmpTankY,64,64,null);break;
-            case 3:g.drawImage(Assets.tankGrey[0],tmpTankX,tmpTankY,64,64,null);break;
+            case 0:g.drawImage(Assets.AIAI,tmpTankX,tmpTankY,256,128,null);break;
+            case 1:g.drawImage(Assets.czlowiekAI,tmpTankX,tmpTankY,256,128,null);break;
+            case 2:g.drawImage(Assets.AIczlowiek,tmpTankX,tmpTankY,256,128,null);break;
+            case 3:g.drawImage(Assets.czlowiekczlowiek,tmpTankX,tmpTankY,256,128,null);break;
         }
 
 

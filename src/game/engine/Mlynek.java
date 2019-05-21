@@ -38,7 +38,7 @@ public class Mlynek {
 
 
     public boolean czyZawieraPole(Pole pole) {
-        if (p1 == pole || p2 == pole || p3 == pole)
+        if (p1.czyToToSamoPole(pole) || p2.czyToToSamoPole(pole) || p3.czyToToSamoPole(pole))
             return true;
         return false;
     }

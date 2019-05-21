@@ -31,8 +31,8 @@ public class Game implements Runnable {
     private KeyManager keyManager;
     private MouseManager mouseManager;
     public int tankColor;
-    public int liczbaPionkowDoRozstawieniaBIALY = 4;
-    public int liczbaPionkowDoRozstawieniaCZARNY = 4;
+    public int liczbaPionkowDoRozstawieniaBIALY = 9;
+    public int liczbaPionkowDoRozstawieniaCZARNY = 9;
     public int liczbaPionkowBIALY = 0;
     public int liczbaPionkowCZARNY = 0;
     public Gracz ruch = BIALY;
@@ -41,7 +41,9 @@ public class Game implements Runnable {
     long czasOdStartu;
     Pole wybranyPionek;
     boolean czyWybral;
-    long opoznienie = 300;
+    long opoznienie = 200;
+    long opoznienieMiedzyRuchami = 200;
+    long timehelperDWA;
     long timeHelper;
     boolean czyCzarnyZbija = false;
     boolean czyBialyZbija = false;
@@ -55,7 +57,7 @@ public class Game implements Runnable {
     int liczbaRuchowBialego = 0;
     int liczbaRuchowCzarnego = 0;
     boolean czyCzarnyAI = true;
-    boolean czyBialyAI = false;
+    boolean czyBialyAI = true;
     Ruch ruchCzarnego = null;
     Ruch ruchBialego = null;
 
@@ -67,25 +69,6 @@ public class Game implements Runnable {
         handler.setKeyManager(keyManager);
     }
 
-    private void rozdajPionki() {
-        wstawPionek(BIALY, "A", 1);
-        wstawPionek(BIALY, "A", 4);
-        wstawPionek(BIALY, "B", 2);
-        wstawPionek(BIALY, "B", 4);
-        wstawPionek(BIALY, "C", 3);
-        wstawPionek(BIALY, "G", 1);
-        wstawPionek(BIALY, "G", 7);
-        wstawPionek(BIALY, "F", 6);
-
-        wstawPionek(CZARNY, "F", 2);
-        wstawPionek(CZARNY, "F", 4);
-        wstawPionek(CZARNY, "G", 4);
-        wstawPionek(CZARNY, "D", 1);
-        wstawPionek(CZARNY, "D", 2);
-        wstawPionek(CZARNY, "D", 5);
-        wstawPionek(CZARNY, "D", 6);
-        wstawPionek(CZARNY, "C", 5);
-    }
 
     private void dopasujPozycje() {
         for (Pole p : board) {
@@ -175,6 +158,8 @@ public class Game implements Runnable {
             graphics.drawString("zakazane pole czarnego:" + ostatniePoleCzarnego.pozycja() + " dla pionka:" + blokowanyCzarnyPionek.pozycja(), 450, 950);
             graphics.drawString("Liczba dostępnych ruchów:" + liczbaDostepnychRuchowDlaPola(wybranyPionek), 450, 975);
             graphics.drawString("Aktualne punkty za młynki:" + policzPunktyZaMlynki(ruch), 10, 920);
+            graphics.drawString("Czy B zbija:" + czyBialyZbija+" ile:"+ileBialyZbija, 10, 940);
+            graphics.drawString("Czy C zbija:" + czyCzarnyZbija+" ile:"+ileCzarnyZbija, 10, 960);
 
             if (ruch == BIALY)
                 graphics.drawImage(Assets.player1, 1100, 766, 64, 64, null);
@@ -324,22 +309,26 @@ public class Game implements Runnable {
 
 
     private void minmax(Gracz gracz) {
-        Ruch max=new Ruch();
-        max.liczbaPunktowPoRuchu=-10000;
+
+        Ruch max = new Ruch();
+        max.rodzajRuchu="brak";
+        max.liczbaPunktowPoRuchu = -10000;
         if (gracz == CZARNY) {
             ArrayList<Ruch> dostepneRuchy = coMozeZrobic(gracz);
             for (Ruch r : dostepneRuchy) {
-                if(r.liczbaPunktowPoRuchu>max.liczbaPunktowPoRuchu)
-                    max=r;
-                System.out.println(CZARNY + ":" + r.rodzajRuchu + ":" + r.skad.pozycja() + ":" + r.dokad.pozycja()+":PKT:"+r.liczbaPunktowPoRuchu);
+                if (r.liczbaPunktowPoRuchu > max.liczbaPunktowPoRuchu){
+                    max = r;
+                }
+                System.out.println(CZARNY + ":" + r.rodzajRuchu + ":" + r.skad.pozycja() + ":" + r.dokad.pozycja() + ":PKT:" + r.liczbaPunktowPoRuchu);
             }
             ruchCzarnego = max;
-        }else if (gracz == BIALY) {
+        } else if (gracz == BIALY) {
             ArrayList<Ruch> dostepneRuchy = coMozeZrobic(gracz);
             for (Ruch r : dostepneRuchy) {
-                if(r.liczbaPunktowPoRuchu>max.liczbaPunktowPoRuchu)
-                    max=r;
-                //  System.out.println(BIALY+":"+r.rodzajRuchu + ":" + r.skad.pozycja() + ":" + r.dokad.pozycja());
+                if (r.liczbaPunktowPoRuchu > max.liczbaPunktowPoRuchu){
+                    max = r;
+                }
+                System.out.println(CZARNY + ":" + r.rodzajRuchu + ":" + r.skad.pozycja() + ":" + r.dokad.pozycja() + ":PKT:" + r.liczbaPunktowPoRuchu);
             }
             ruchBialego = max;
         }
@@ -357,6 +346,13 @@ public class Game implements Runnable {
                         r.skad = new Pole("", 0);
                         r.dokad = pole.copy();
                         r.stanGry = stanGryPoRuchu(r);
+                        r.czyZbija = r.stanGry.czyCzarnyZbija;
+                        if (r.czyZbija) { //możliwy nullpointer
+                            r.coZbic = r.stanGry.coZbicBialego(null);
+                            if (r.ileZbija == 2) {
+                                r.coZbic = r.stanGry.coZbicBialego(r.coZbic);
+                            }
+                        }
                         r.liczbaPunktowPoRuchu = r.stanGry.punktyCzarnego;
                         ruchy.add(r);
                     }
@@ -372,6 +368,13 @@ public class Game implements Runnable {
                             r.skad = pole.copy();
                             r.dokad = p.copy();
                             r.stanGry = stanGryPoRuchu(r);
+                            r.czyZbija = r.stanGry.czyCzarnyZbija;
+                            if (r.czyZbija) { //możliwy nullpointer
+                                r.coZbic = r.stanGry.coZbicBialego(null);
+                                if (r.ileZbija == 2) {
+                                    r.coZbic = r.stanGry.coZbicBialego(r.coZbic);
+                                }
+                            }
                             r.liczbaPunktowPoRuchu = r.stanGry.punktyCzarnego;
                             ruchy.add(r);
                         }
@@ -382,13 +385,20 @@ public class Game implements Runnable {
                     if (poleGracza.zajetePrzez == CZARNY) {
                         for (Pole poleWolne : board) {
                             if (poleWolne.czyWolne) {
-                                if (!czyToCofanie(poleGracza,poleWolne)) {
+                                if (!czyToCofanie(poleGracza, poleWolne)) {
                                     Ruch r = new Ruch();
                                     r.gracz = CZARNY;
                                     r.rodzajRuchu = "rusz";
                                     r.skad = poleGracza.copy();
                                     r.dokad = poleWolne.copy();
                                     r.stanGry = stanGryPoRuchu(r);
+                                    r.czyZbija = r.stanGry.czyCzarnyZbija;
+                                    if (r.czyZbija) { //możliwy nullpointer
+                                        r.coZbic = r.stanGry.coZbicBialego(null);
+                                        if (r.ileZbija == 2) {
+                                            r.coZbic = r.stanGry.coZbicBialego(r.coZbic);
+                                        }
+                                    }
                                     r.liczbaPunktowPoRuchu = r.stanGry.punktyCzarnego;
                                     ruchy.add(r);
                                 }
@@ -407,7 +417,14 @@ public class Game implements Runnable {
                         r.skad = new Pole("", 0);
                         r.dokad = pole.copy();
                         r.stanGry = stanGryPoRuchu(r);
-                        r.liczbaPunktowPoRuchu = r.stanGry.punktyCzarnego;
+                        r.czyZbija = r.stanGry.czyBialyZbija;
+                        if (r.czyZbija) { //możliwy nullpointer
+                            r.coZbic = r.stanGry.coZbicCzarnego(null);
+                            if (r.ileZbija == 2) {
+                                r.coZbic = r.stanGry.coZbicCzarnego(r.coZbic);
+                            }
+                        }
+                        r.liczbaPunktowPoRuchu = r.stanGry.punktyBialego;
                         ruchy.add(r);
                     }
                 }
@@ -422,24 +439,40 @@ public class Game implements Runnable {
                             r.skad = pole.copy();
                             r.dokad = p.copy();
                             r.stanGry = stanGryPoRuchu(r);
-                            r.liczbaPunktowPoRuchu = r.stanGry.punktyCzarnego;
+                            r.czyZbija = r.stanGry.czyBialyZbija;
+                            if (r.czyZbija) { //możliwy nullpointer
+                                r.coZbic = r.stanGry.coZbicCzarnego(null);
+                                if (r.ileZbija == 2) {
+                                    r.coZbic = r.stanGry.coZbicCzarnego(r.coZbic);
+                                }
+                            }
+                            r.liczbaPunktowPoRuchu = r.stanGry.punktyBialego;
                             ruchy.add(r);
                         }
                     }
                 }
-            } else if (liczbaPionkowBIALY == 3) { //poruszanie BIALEGO po całej planszy
+            } else if (liczbaPionkowBIALY == 3) { //poruszanie CZARNEGO po całej planszy
                 for (Pole poleGracza : board) {
                     if (poleGracza.zajetePrzez == BIALY) {
                         for (Pole poleWolne : board) {
                             if (poleWolne.czyWolne) {
-                                Ruch r = new Ruch();
-                                r.gracz = BIALY;
-                                r.rodzajRuchu = "rusz";
-                                r.skad = poleGracza.copy();
-                                r.dokad = poleWolne.copy();
-                                r.stanGry = stanGryPoRuchu(r);
-                                r.liczbaPunktowPoRuchu = r.stanGry.punktyCzarnego;
-                                ruchy.add(r);
+                                if (!czyToCofanie(poleGracza, poleWolne)) {
+                                    Ruch r = new Ruch();
+                                    r.gracz = BIALY;
+                                    r.rodzajRuchu = "rusz";
+                                    r.skad = poleGracza.copy();
+                                    r.dokad = poleWolne.copy();
+                                    r.stanGry = stanGryPoRuchu(r);
+                                    r.czyZbija = r.stanGry.czyBialyZbija;
+                                    if (r.czyZbija) { //możliwy nullpointer
+                                        r.coZbic = r.stanGry.coZbicCzarnego(null);
+                                        if (r.ileZbija == 2) {
+                                            r.coZbic = r.stanGry.coZbicCzarnego(r.coZbic);
+                                        }
+                                    }
+                                    r.liczbaPunktowPoRuchu = r.stanGry.punktyBialego;
+                                    ruchy.add(r);
+                                }
                             }
                         }
                     }
@@ -450,15 +483,15 @@ public class Game implements Runnable {
     }
 
     private boolean czyToCofanie(Pole poleGracza, Pole poleWolne) {
-        if(poleGracza.zajetePrzez==CZARNY){
-            if(poleGracza.czyToToSamoPole(blokowanyCzarnyPionek)){
-                if(poleWolne.czyToToSamoPole(ostatniePoleCzarnego))
+        if (poleGracza.zajetePrzez == CZARNY) {
+            if (poleGracza.czyToToSamoPole(blokowanyCzarnyPionek)) {
+                if (poleWolne.czyToToSamoPole(ostatniePoleCzarnego))
                     return true;
             }
             return false;
-        }else if(poleGracza.zajetePrzez==BIALY){
-            if(poleGracza.czyToToSamoPole(blokowanyBialyPionek)){
-                if(poleWolne.czyToToSamoPole(ostatniePoleBialego))
+        } else if (poleGracza.zajetePrzez == BIALY) {
+            if (poleGracza.czyToToSamoPole(blokowanyBialyPionek)) {
+                if (poleWolne.czyToToSamoPole(ostatniePoleBialego))
                     return true;
             }
             return false;
@@ -497,14 +530,14 @@ public class Game implements Runnable {
         for (Pole p : board) {
             stan.board.add(p.copy());
         }
-        for(Mlynek m:mlynki)
+        for (Mlynek m : mlynki)
             stan.mlynki.add(m.copy());
 
 
-        stan.wykonajRuch(r,r.gracz);
-        stan.punktyCzarnego=stan.policzPunktyZaMlynki(CZARNY,stan.board);
-        stan.punktyBialego=stan.policzPunktyZaMlynki(BIALY,stan.board);
-
+        stan.wykonajRuch(r, r.gracz);
+        stan.punktyCzarnego = stan.policzPunktyZaMlynki(CZARNY, stan.board);
+        stan.punktyBialego = stan.policzPunktyZaMlynki(BIALY, stan.board);
+        //stan.aktywujMlynki(r.dokad);
 
         return stan;
     }
@@ -512,47 +545,49 @@ public class Game implements Runnable {
     private void update() {
         currentState.update();
         keyManager.update();
-        if (currentState.getClass() != MenuState.class) {
+
+
+        if (currentState.getClass() != MenuState.class && currentState.getClass() != EndgameState.class) {
 
             if (mouseManager.isLeftPressed()) {
 
                 if (czyBialyZbija || czyCzarnyZbija) { //zbijanie
-                    if (czyBialyZbija) { //zbijanie przez BIALEGO
-                        for (int i = 0; i < ileBialyZbija; ) {
-                            Pole kliknietePole = polePodXY(mouseManager.getMouseX(), mouseManager.getMouseY());
-                            if (kliknietePole != null) {
-                                if (kliknietePole.zajetePrzez == CZARNY) {
-                                    kliknietePole.zajetePrzez = null;
-                                    kliknietePole.czyWolne = true;
-                                    czyBialyZbija = false;
-                                    liczbaPionkowCZARNY -= 1;
+                    if (czyBialyZbija && !czyBialyAI) { //zbijanie przez BIALEGO
+                        Pole kliknietePole = polePodXY(mouseManager.getMouseX(), mouseManager.getMouseY());
+                        if (kliknietePole != null) {
+                            if (kliknietePole.zajetePrzez == CZARNY) {
+                                kliknietePole.zajetePrzez = null;
+                                kliknietePole.czyWolne = true;
+                                liczbaPionkowCZARNY -= 1;
+                                ileBialyZbija -= 1;
+                                if (ileBialyZbija == 0) {
                                     ruch = CZARNY;
-                                    i++;
-                                    liczbaRuchowBialego += 1;
-                                    log("BIALY zbija pionek:" + kliknietePole.pozycja());
+                                    czyBialyZbija = false;
                                 }
+                                liczbaRuchowBialego += 1;
+                                log("BIALY zbija pionek:" + kliknietePole.pozycja());
                             }
                         }
-                    } else if (czyCzarnyZbija) { //zbijanie przez CZARNEGO
-                        for (int i = 0; i < ileCzarnyZbija; ) {
-                            Pole kliknietePole = polePodXY(mouseManager.getMouseX(), mouseManager.getMouseY());
-                            if (kliknietePole != null) {
-                                if (kliknietePole.zajetePrzez == BIALY) {
-                                    kliknietePole.zajetePrzez = null;
-                                    kliknietePole.czyWolne = true;
-                                    czyCzarnyZbija = false;
-                                    liczbaPionkowBIALY -= 1;
+                    } else if (czyCzarnyZbija && !czyCzarnyAI) { //zbijanie przez CZARNEGO
+                        Pole kliknietePole = polePodXY(mouseManager.getMouseX(), mouseManager.getMouseY());
+                        if (kliknietePole != null) {
+                            if (kliknietePole.zajetePrzez == BIALY) {
+                                kliknietePole.zajetePrzez = null;
+                                kliknietePole.czyWolne = true;
+                                liczbaPionkowBIALY -= 1;
+                                ileCzarnyZbija -= 1;
+                                if (ileCzarnyZbija == 0) {
                                     ruch = BIALY;
-                                    i++;
-                                    liczbaRuchowCzarnego += 1;
-                                    log("CZARNY zbija pionek:" + kliknietePole.pozycja());
+                                    czyCzarnyZbija = false;
                                 }
+                                liczbaRuchowCzarnego += 1;
+                                log("CZARNY zbija pionek:" + kliknietePole.pozycja());
                             }
                         }
                     }
                 } else {
                     if (liczbaPionkowDoRozstawieniaBIALY > 0 && ruch == BIALY) { //rozstawianie białych
-                        timeHelper=System.currentTimeMillis();//todel
+                        timeHelper = System.currentTimeMillis();//todel
 //                        postawPionek(BIALY, mouseManager.getMouseX(), mouseManager.getMouseY());
                         Pole kliknietePole = polePodXY(mouseManager.getMouseX(), mouseManager.getMouseY());
                         if (kliknietePole != null && kliknietePole.czyWolne) {
@@ -569,7 +604,7 @@ public class Game implements Runnable {
 
 
                     } else if (liczbaPionkowDoRozstawieniaCZARNY > 0 && ruch == CZARNY) { //rozstawianie czarnych
-                        timeHelper=System.currentTimeMillis();//todel
+                        timeHelper = System.currentTimeMillis();//todel
 //                        postawPionek(CZARNY, mouseManager.getMouseX(), mouseManager.getMouseY());
                         Pole kliknietePole = polePodXY(mouseManager.getMouseX(), mouseManager.getMouseY());
                         if (kliknietePole != null && kliknietePole.czyWolne) {
@@ -587,8 +622,8 @@ public class Game implements Runnable {
                         Pole kliknietePole = polePodXY(mouseManager.getMouseX(), mouseManager.getMouseY());
                         if (kliknietePole != null) {
                             if (wybranyPionek != null) {
-                                if (kliknietePole == wybranyPionek &&System.currentTimeMillis() - timeHelper > opoznienie) { // odznaczenie pionka
-                                    timeHelper=System.currentTimeMillis();//todel
+                                if (kliknietePole == wybranyPionek && System.currentTimeMillis() - timeHelper > opoznienie) { // odznaczenie pionka
+                                    timeHelper = System.currentTimeMillis();//todel
 
                                     wybranyPionek.czyWybrany = false;
                                     czyWybral = false;
@@ -617,9 +652,10 @@ public class Game implements Runnable {
                                                     liczbaRuchowBialego += 1;
                                                 }
                                             }
-                                        }timeHelper=System.currentTimeMillis();//todel
+                                        }
+                                        timeHelper = System.currentTimeMillis();//todel
                                     } else if (ruch == CZARNY) {
-                                        timeHelper=System.currentTimeMillis();//todel
+                                        timeHelper = System.currentTimeMillis();//todel
                                         if (liczbaPionkowCZARNY == 3) { //poruszanie po całej planszy
                                             if (wybranyPionek.czyToToSamoPole(blokowanyCzarnyPionek) && kliknietePole.czyToToSamoPole(ostatniePoleCzarnego)) {
                                             } else {
@@ -647,7 +683,7 @@ public class Game implements Runnable {
 
                                 }
 
-                            } else if (kliknietePole.zajetePrzez == ruch&&System.currentTimeMillis() - timeHelper > opoznienie) { //zaznaczenie pionka
+                            } else if (kliknietePole.zajetePrzez == ruch && System.currentTimeMillis() - timeHelper > opoznienie) { //zaznaczenie pionka
                                 timeHelper = System.currentTimeMillis(); //TODO
 
 
@@ -662,49 +698,94 @@ public class Game implements Runnable {
                     //delay
 
                 }
-                if (liczbaPionkowCZARNY < 3 && liczbaPionkowDoRozstawieniaCZARNY == 0) {
-                    ktoWygral = BIALY;
-                    log("BIALY wygrywa");
-                    EndgameState endgameState = new EndgameState(handler);
-                    setCurrentState(endgameState);
-                } else if (liczbaPionkowBIALY < 3 && liczbaPionkowDoRozstawieniaBIALY == 0) {
-                    ktoWygral = CZARNY;
-                    log("CZARNY wygrywa");
-                    EndgameState endgameState = new EndgameState(handler);
-                    setCurrentState(endgameState);
-                }
 
-//                timeHelper = System.currentTimeMillis();
-//                while (System.currentTimeMillis() - timeHelper < opoznienie) {
-//
-//                }
+                timeHelper = System.currentTimeMillis();
+                while (System.currentTimeMillis() - timeHelper < opoznienie) {
+
+                }
             }
 
-            if (ruch == CZARNY) {//estymacja ruchu
+            if (ruch == CZARNY && czyCzarnyAI) {//estymacja ruchu
                 minmax(CZARNY);
             }
-            if (ruch == BIALY) {//estymacja ruchu
+            if (ruch == BIALY && czyBialyAI) {//estymacja ruchu
                 minmax(BIALY);
             }
-
+            //implai
             if (czyCzarnyAI && ruch == CZARNY) {
-                wykonajRuch(ruchCzarnego,ruch);
-                ruchCzarnego=null;
+                wykonajRuch(ruchCzarnego, ruch);
 
-            }else if(czyBialyAI&&ruch == BIALY) {
+                timehelperDWA=System.currentTimeMillis(); //opoznienie miedzy ruchami botow
+                while(System.currentTimeMillis()-timehelperDWA<opoznienieMiedzyRuchami){
+
+                }
+
+                ruchCzarnego = null;
+
+            } else if (czyBialyAI && ruch == BIALY) {
                 wykonajRuch(ruchBialego, ruch);
+
+                timehelperDWA=System.currentTimeMillis(); //opoznienie miedzy ruchami botow
+                while(System.currentTimeMillis()-timehelperDWA<opoznienieMiedzyRuchami){
+
+                }
+
                 ruchBialego = null;
 
             }
 
+
+            if (ktoWygral==BIALY||(liczbaPionkowCZARNY < 3 && liczbaPionkowDoRozstawieniaCZARNY == 0)) { //kto wygrał
+                ktoWygral = BIALY;
+                log("BIALY wygrywa");
+                log("Czas rozgrywki:"+(System.currentTimeMillis() - czasOdStartu) / 1000 + " [s]");
+                log("Liczba ruchów białego:"+liczbaRuchowBialego);
+                log("Liczba ruchów czarnego:"+liczbaRuchowCzarnego);
+                EndgameState endgameState = new EndgameState(handler);
+                setCurrentState(endgameState);
+            } else if (ktoWygral==CZARNY||(liczbaPionkowBIALY < 3 && liczbaPionkowDoRozstawieniaBIALY == 0)) {
+                ktoWygral = CZARNY;
+                log("CZARNY wygrywa");
+                log("Czas rozgrywki:"+(System.currentTimeMillis() - czasOdStartu) / 1000 + " [s]");
+                EndgameState endgameState = new EndgameState(handler);
+                setCurrentState(endgameState);
+            }
         }
     }
 
-    private void wykonajRuch(Ruch r,Gracz ruch) {
-        if (ruch == CZARNY && r != null) {//CZARNY
+    private void zbijPionek(Pole pionek) {
+        if (pionek.zajetePrzez == BIALY) {
+            liczbaPionkowCZARNY -= 1;
+            ileBialyZbija -= 1;
+            liczbaRuchowBialego+=1;
+        } else if (pionek.zajetePrzez == CZARNY) {
+            liczbaPionkowBIALY -= 1;
+            ileCzarnyZbija -= 1;
+            liczbaRuchowCzarnego+=1;
+        }
+        log("AI:"+pionek.zajetePrzez+" zbija:"+pionek.pozycja());
+        zwolnijPole(polePodAlphaNumber(pionek.alpha, pionek.number));
+    }
+
+    private void wykonajRuch(Ruch r, Gracz ruch) {
+        if(r!=null&&r.rodzajRuchu.equals("brak")){
+            if(ruch==BIALY)
+                ktoWygral=CZARNY;
+            else
+                ktoWygral=BIALY;
+        }else if (ruch == CZARNY && r != null) {//CZARNY
             if (r.rodzajRuchu.equals("postaw")) {
                 log("AI:Czarny wstawia pionek na:" + r.dokad.pozycja());
                 wstawPionek(CZARNY, r.dokad.alpha, r.dokad.number);
+                aktywujMlynki(polePodAlphaNumber(r.dokad.alpha, r.dokad.number));
+                if (r.czyZbija) { //breakpoint
+                    zbijPionek(r.coZbic);
+                    if (r.ileZbija == 2) {
+                        zbijPionek(r.coZbic2);
+                    }
+                    czyCzarnyZbija = false;
+                    this.ruch = BIALY;
+                }
             } else if (r.rodzajRuchu.equals("rusz")) {
                 Pole tmp = polePodAlphaNumber(r.skad.alpha, r.skad.number);
                 ostatniePoleCzarnego = new Pole(tmp, false);
@@ -712,21 +793,44 @@ public class Game implements Runnable {
                 zwolnijPole(tmp);
                 wstawPionek(CZARNY, r.dokad.alpha, r.dokad.number);
                 blokowanyCzarnyPionek = polePodAlphaNumber(r.dokad.alpha, r.dokad.number);
+                aktywujMlynki(polePodAlphaNumber(r.dokad.alpha, r.dokad.number));
+                if (r.czyZbija) {
+                    zbijPionek(r.coZbic);
+                    if (r.ileZbija == 2) {
+                        zbijPionek(r.coZbic2);
+                    }
+                }
             }
 
         } else if (ruch == BIALY && r != null) {//BIALY
             if (r.rodzajRuchu.equals("postaw")) {
+                log("AI:BIALY wstawia pionek na:" + r.dokad.pozycja());
                 wstawPionek(BIALY, r.dokad.alpha, r.dokad.number);
-                r = r.nastepnyRuch;
+                aktywujMlynki(polePodAlphaNumber(r.dokad.alpha, r.dokad.number));
+                if (r.czyZbija) { //breakpoint
+                    zbijPionek(r.coZbic);
+                    if (r.ileZbija == 2) {
+                        zbijPionek(r.coZbic2);
+                    }
+                    czyBialyZbija = false;
+                    this.ruch = CZARNY;
+                }
             } else if (r.rodzajRuchu.equals("rusz")) {
                 Pole tmp = polePodAlphaNumber(r.skad.alpha, r.skad.number);
                 ostatniePoleBialego = new Pole(tmp, false);
-                log("AI:Bialy rusza pionek z:" + r.skad.pozycja() + " na:" + r.dokad.pozycja());
+                log("AI:BIALY rusza pionek z:" + r.skad.pozycja() + " na:" + r.dokad.pozycja());
                 zwolnijPole(tmp);
                 wstawPionek(BIALY, r.dokad.alpha, r.dokad.number);
                 blokowanyBialyPionek = polePodAlphaNumber(r.dokad.alpha, r.dokad.number);
-                r = r.nastepnyRuch;
+                aktywujMlynki(polePodAlphaNumber(r.dokad.alpha, r.dokad.number));
+                if (r.czyZbija) {
+                    zbijPionek(r.coZbic);
+                    if (r.ileZbija == 2) {
+                        zbijPionek(r.coZbic2);
+                    }
+                }
             }
+
         }
     }
 
@@ -734,6 +838,7 @@ public class Game implements Runnable {
         tmp.zajetePrzez = null;
         tmp.czyWolne = true;
         tmp.czyWybrany = false;
+
     }
 
     private int policzPunktyZaMlynki(Gracz gracz) {
@@ -803,10 +908,10 @@ public class Game implements Runnable {
     private void ruszPionek(Pole kliknietePole) {
         if (ruch == BIALY) { //logowanie
             log("BIALY przesuwa pionek z:" + wybranyPionek.pozycja() + " na:" + kliknietePole.pozycja());
-            ruchBialego = ruchBialego.nastepnyRuch;
+            ruchBialego = null;
         } else if (ruch == CZARNY) {
             log("CZARNY przesuwa pionek z:" + wybranyPionek.pozycja() + " na:" + kliknietePole.pozycja());
-            ruchCzarnego = ruchCzarnego.nastepnyRuch;
+            ruchCzarnego = null;
         }
         wybranyPionek.czyWolne = true;
         wybranyPionek.czyWybrany = false;
@@ -829,7 +934,7 @@ public class Game implements Runnable {
         ileCzarnyZbija = 0;
         for (Mlynek mlynek : mlynki) {
             if (mlynek.czyZawieraPole(pole)) {
-                if (mlynek.czyMlynek()) {
+                if (mlynek.czyMlynek(board)) {
                     mlynek.czyAktywny = true;
                     if (pole.zajetePrzez == BIALY) {
                         czyBialyZbija = true;
@@ -854,12 +959,14 @@ public class Game implements Runnable {
                     if (liczbaPionkowDoRozstawieniaBIALY > 0) {
                         liczbaPionkowDoRozstawieniaBIALY -= 1;
                         liczbaPionkowBIALY += 1;
+                        liczbaRuchowBialego+=1;
                     }
                 } else if (gracz == CZARNY) {
                     ruch = BIALY;
                     if (liczbaPionkowDoRozstawieniaCZARNY > 0) {
                         liczbaPionkowDoRozstawieniaCZARNY -= 1;
                         liczbaPionkowCZARNY += 1;
+                        liczbaRuchowCzarnego+=1;
                     }
                 }
             }
@@ -984,11 +1091,19 @@ public class Game implements Runnable {
     public void startNewGame() {
         GameState newGame = new GameState(handler);
         setCurrentState(newGame);
+        switch (tankColor){
+            case 0:czyBialyAI=true; czyCzarnyAI=true; break;
+            case 1:czyBialyAI=false; czyCzarnyAI=true; break;
+            case 2:czyBialyAI=true; czyCzarnyAI=false; break;
+            case 3:czyBialyAI=false; czyCzarnyAI=false; break;
+
+        }
     }
 
     public static boolean between(int i, int minValueInclusive, int maxValueInclusive) {
         return (i >= minValueInclusive && i <= maxValueInclusive);
     }
+
     private void init() {
         display = new Display(handler.getTitle(), handler.getWidth(), handler.getHeight());
         display.getFrame().addKeyListener(keyManager);
@@ -1166,4 +1281,24 @@ public class Game implements Runnable {
         //  wypelnijPola();
         //  rozdajPionki();
     }
+    private void rozdajPionki() {
+        wstawPionek(BIALY, "A", 1);
+        wstawPionek(BIALY, "A", 4);
+        wstawPionek(BIALY, "B", 2);
+        wstawPionek(BIALY, "B", 4);
+        wstawPionek(BIALY, "C", 3);
+        wstawPionek(BIALY, "G", 1);
+        wstawPionek(BIALY, "G", 7);
+        wstawPionek(BIALY, "F", 6);
+
+        wstawPionek(CZARNY, "F", 2);
+        wstawPionek(CZARNY, "F", 4);
+        wstawPionek(CZARNY, "G", 4);
+        wstawPionek(CZARNY, "D", 1);
+        wstawPionek(CZARNY, "D", 2);
+        wstawPionek(CZARNY, "D", 5);
+        wstawPionek(CZARNY, "D", 6);
+        wstawPionek(CZARNY, "C", 5);
+    }
+
 }

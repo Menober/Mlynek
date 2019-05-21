@@ -8,7 +8,7 @@ public class Assets {
 
     public static BufferedImage brick, water,dirt,stone,grass, tlo,player1,player2;
     public static BufferedImage[] tankRed,tankGreen,tankGrey,tankYellow;
-    public static BufferedImage start,starth,color,colorh,exit,exith;
+    public static BufferedImage start,starth,color,colorh,exit,exith,czlowiekAI,czlowiekczlowiek,AIczlowiek,AIAI;
 
     public static void init(){
 
@@ -31,6 +31,10 @@ public class Assets {
         colorh=new SpriteSheet(ImageLoader.loadImage("/textures/colorh.png")).crop(0,0,256,128);
         exit=new SpriteSheet(ImageLoader.loadImage("/textures/exit.png")).crop(0,0,256,128);
         exith=new SpriteSheet(ImageLoader.loadImage("/textures/exith.png")).crop(0,0,256,128);
+        czlowiekAI=new SpriteSheet(ImageLoader.loadImage("/textures/czlowiekAI.png")).crop(0,0,256,128);
+        czlowiekczlowiek=new SpriteSheet(ImageLoader.loadImage("/textures/czlowiekczlowiek.png")).crop(0,0,256,128);
+        AIczlowiek=new SpriteSheet(ImageLoader.loadImage("/textures/AIczlowiek.png")).crop(0,0,256,128);
+        AIAI=new SpriteSheet(ImageLoader.loadImage("/textures/AIAI.png")).crop(0,0,256,128);
         tlo =new SpriteSheet(ImageLoader.loadImage("/textures/tlo.png")).crop(0,0,900,900);
 
         SpriteSheet tank=new SpriteSheet(ImageLoader.loadImage("/textures/tankYellow.png"));

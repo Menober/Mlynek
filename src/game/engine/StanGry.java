@@ -29,6 +29,11 @@ public class StanGry {
     int liczbaRuchowCzarnego ;
     int punktyCzarnego;
     int punktyBialego;
+    int glebokosc=2;
+    Ruch ruchCzarnego = null;
+    Ruch ruchBialego = null;
+
+    
 
     public int policzPunktyZaMlynki(Gracz gracz,ArrayList<Pole> board) {
         int liczbaPunktow = 0;
@@ -39,31 +44,61 @@ public class StanGry {
     }
 
 
-    public void wykonajRuch(Ruch r,Gracz ruch) {
+    public void wykonajRuch(Ruch r, Gracz ruch) {
         if (ruch == CZARNY && r != null) {//CZARNY
             if (r.rodzajRuchu.equals("postaw")) {
                 wstawPionek(CZARNY, r.dokad.alpha, r.dokad.number);
+                aktywujMlynki(polePodAlphaNumber(r.dokad.alpha, r.dokad.number));
+                if (r.czyZbija) {
+//                    zbijPionek(r);
+                    if (r.ileZbija == 2) {
+//                        zbijPionek(r);
+                    }
+//                    czyCzarnyZbija=false;
+//                    this.ruch=BIALY;
+                }
             } else if (r.rodzajRuchu.equals("rusz")) {
                 Pole tmp = polePodAlphaNumber(r.skad.alpha, r.skad.number);
                 ostatniePoleCzarnego = new Pole(tmp, false);
                 zwolnijPole(tmp);
                 wstawPionek(CZARNY, r.dokad.alpha, r.dokad.number);
                 blokowanyCzarnyPionek = polePodAlphaNumber(r.dokad.alpha, r.dokad.number);
+                aktywujMlynki(polePodAlphaNumber(r.dokad.alpha, r.dokad.number));
+                if (r.czyZbija) {
+//                    zbijPionek(r);
+                    if (r.ileZbija == 2) {
+//                        zbijPionek(r);
+                    }
+                }
             }
 
         } else if (ruch == BIALY && r != null) {//BIALY
             if (r.rodzajRuchu.equals("postaw")) {
                 wstawPionek(BIALY, r.dokad.alpha, r.dokad.number);
-                r = r.nastepnyRuch;
+                aktywujMlynki(polePodAlphaNumber(r.dokad.alpha, r.dokad.number));
+                if (r.czyZbija) {
+//                    zbijPionek(r);
+                    if (r.ileZbija == 2) {
+//                        zbijPionek(r);
+                    }
+//                    czyCzarnyZbija=false;
+//                    this.ruch=BIALY;
+                }
             } else if (r.rodzajRuchu.equals("rusz")) {
                 Pole tmp = polePodAlphaNumber(r.skad.alpha, r.skad.number);
                 ostatniePoleBialego = new Pole(tmp, false);
-//                log("AI:Bialy rusza pionek z:" + r.skad.pozycja() + " na:" + r.dokad.pozycja());
                 zwolnijPole(tmp);
                 wstawPionek(BIALY, r.dokad.alpha, r.dokad.number);
                 blokowanyBialyPionek = polePodAlphaNumber(r.dokad.alpha, r.dokad.number);
-                r = r.nastepnyRuch;
+                aktywujMlynki(polePodAlphaNumber(r.dokad.alpha, r.dokad.number));
+                if (r.czyZbija) {
+//                    zbijPionek(r);
+                    if (r.ileZbija == 2) {
+//                        zbijPionek(r);
+                    }
+                }
             }
+
         }
     }
 
@@ -108,4 +143,56 @@ public class StanGry {
         tmp.czyWybrany = false;
     }
 
+    public Pole coZbicBialego(Pole pierwszeZbicie ) {
+        if(pierwszeZbicie==null){
+            for(Pole p:board){
+                if(p.zajetePrzez==BIALY){
+                    return p;
+                }
+            }
+        }else{
+            for(Pole p:board){
+                if(p.zajetePrzez==BIALY&&!p.czyToToSamoPole(pierwszeZbicie)){
+                    return p;
+                }
+            }
+        }
+        return null;
+    }
+
+    public Pole coZbicCzarnego(Pole pierwszeZbicie) {
+        if(pierwszeZbicie==null){
+            for(Pole p:board){
+                if(p.zajetePrzez==CZARNY){
+                    return p;
+                }
+            }
+        }else{
+            for(Pole p:board){
+                if(p.zajetePrzez==CZARNY&&!p.czyToToSamoPole(pierwszeZbicie)){
+                    return p;
+                }
+            }
+        }
+        return null;
+    }
+
+    public void aktywujMlynki(Pole pole) {
+        ileBialyZbija = 0;
+        ileCzarnyZbija = 0;
+        for (Mlynek mlynek : mlynki) {
+            if (mlynek.czyZawieraPole(pole)) {
+                if (mlynek.czyMlynek(board)) {
+                    mlynek.czyAktywny = true;
+                    if (pole.zajetePrzez == BIALY) {
+                        czyBialyZbija = true;
+                        ileBialyZbija += 1;
+                    } else if (pole.zajetePrzez == CZARNY) {
+                        czyCzarnyZbija = true;
+                        ileCzarnyZbija += 1;
+                    }
+                }
+            }
+        }
+    }
 }
