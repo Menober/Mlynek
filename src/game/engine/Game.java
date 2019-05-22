@@ -60,7 +60,7 @@ public class Game implements Runnable {
     boolean czyBialyAI = true;
     Ruch ruchCzarnego = null;
     Ruch ruchBialego = null;
-
+    boolean debug=true;
 
     Game(Handler handler) {
         this.handler = handler;
@@ -321,7 +321,8 @@ public class Game implements Runnable {
                 if (r.liczbaPunktowPoRuchu > max.liczbaPunktowPoRuchu){
                     max = r;
                 }
-                System.out.println(CZARNY + ":" + r.rodzajRuchu + ":" + r.skad.pozycja() + ":" + r.dokad.pozycja() + ":PKT:" + r.liczbaPunktowPoRuchu);
+                if(debug)
+                    System.out.println(CZARNY + ":" + r.rodzajRuchu + ":" + r.skad.pozycja() + ":" + r.dokad.pozycja() + ":PKT:" + r.liczbaPunktowPoRuchu);
             }
             ruchCzarnego = max;
         } else if (gracz == BIALY) {
@@ -330,7 +331,8 @@ public class Game implements Runnable {
                 if (r.liczbaPunktowPoRuchu > max.liczbaPunktowPoRuchu){
                     max = r;
                 }
-                System.out.println(CZARNY + ":" + r.rodzajRuchu + ":" + r.skad.pozycja() + ":" + r.dokad.pozycja() + ":PKT:" + r.liczbaPunktowPoRuchu);
+                if(debug)
+                    System.out.println(BIALY + ":" + r.rodzajRuchu + ":" + r.skad.pozycja() + ":" + r.dokad.pozycja() + ":PKT:" + r.liczbaPunktowPoRuchu);
             }
             ruchBialego = max;
         }
@@ -356,7 +358,6 @@ public class Game implements Runnable {
                             }
                         }
                         r.liczbaPunktowPoRuchu = r.stanGry.punktyCzarnego;
-                        System.out.println("ILEZBIJA"+r.ileZbija);
                         ruchy.add(r);
                     }
                 }
@@ -450,7 +451,6 @@ public class Game implements Runnable {
                                 }
                             }
                             r.liczbaPunktowPoRuchu = r.stanGry.punktyBialego;
-                            System.out.println("ILEZBIJA"+r.ileZbija);
                             ruchy.add(r);
                         }
                     }
@@ -475,7 +475,6 @@ public class Game implements Runnable {
                                         }
                                     }
                                     r.liczbaPunktowPoRuchu = r.stanGry.punktyBialego;
-                                    System.out.println("ILEZBIJA"+r.ileZbija);
                                     ruchy.add(r);
                                 }
                             }
@@ -540,8 +539,9 @@ public class Game implements Runnable {
 
 
         stan.wykonajRuch(r, r.gracz);
-        stan.punktyCzarnego = stan.policzPunktyZaMlynki(CZARNY, stan.board);
-        stan.punktyBialego = stan.policzPunktyZaMlynki(BIALY, stan.board);
+        //funkcjeOceny
+        stan.punktyCzarnego = 10*stan.policzLiczbeRuchowGracza(CZARNY)+stan.policzPunktyZaMlynki(CZARNY, stan.board)-(stan.liczbaPionkowBIALY-liczbaPionkowBIALY);
+        stan.punktyBialego = 10*stan.policzLiczbeRuchowGracza(BIALY)+stan.policzPunktyZaMlynki(BIALY, stan.board)-(stan.liczbaPionkowCZARNY-liczbaPionkowCZARNY);
         if(r.gracz==BIALY)
             r.ileZbija=stan.ileBialyZbija;
         else

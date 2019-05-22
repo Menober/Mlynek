@@ -6,11 +6,11 @@ import static game.engine.Gracz.BIALY;
 import static game.engine.Gracz.CZARNY;
 
 public class StanGry {
-    public int liczbaPionkowDoRozstawieniaBIALY ;
+    public int liczbaPionkowDoRozstawieniaBIALY;
     public int liczbaPionkowDoRozstawieniaCZARNY;
-    public int liczbaPionkowBIALY ;
-    public int liczbaPionkowCZARNY ;
-    public Gracz ruch ;
+    public int liczbaPionkowBIALY;
+    public int liczbaPionkowCZARNY;
+    public Gracz ruch;
     public ArrayList<Pole> board = new ArrayList<>();
     public ArrayList<Mlynek> mlynki = new ArrayList<Mlynek>();
     long czasOdStartu;
@@ -18,27 +18,26 @@ public class StanGry {
     boolean czyWybral;
     boolean czyCzarnyZbija = false;
     boolean czyBialyZbija = false;
-    int ileBialyZbija ;
+    int ileBialyZbija;
     int ileCzarnyZbija;
     Gracz ktoWygral = null;
-    Pole ostatniePoleBialego ;
-    Pole ostatniePoleCzarnego ;
-    Pole blokowanyBialyPionek ;
-    Pole blokowanyCzarnyPionek ;
-    int liczbaRuchowBialego ;
-    int liczbaRuchowCzarnego ;
+    Pole ostatniePoleBialego;
+    Pole ostatniePoleCzarnego;
+    Pole blokowanyBialyPionek;
+    Pole blokowanyCzarnyPionek;
+    int liczbaRuchowBialego;
+    int liczbaRuchowCzarnego;
     int punktyCzarnego;
     int punktyBialego;
-    int glebokosc=2;
+    int glebokosc = 2;
     Ruch ruchCzarnego = null;
     Ruch ruchBialego = null;
 
 
-
-    public int policzPunktyZaMlynki(Gracz gracz,ArrayList<Pole> board) {
+    public int policzPunktyZaMlynki(Gracz gracz, ArrayList<Pole> board) {
         int liczbaPunktow = 0;
         for (Mlynek m : mlynki) {
-            liczbaPunktow += m.ilePunktowZaMlynek(gracz,board);
+            liczbaPunktow += m.ilePunktowZaMlynek(gracz, board);
         }
         return liczbaPunktow;
     }
@@ -143,16 +142,16 @@ public class StanGry {
         tmp.czyWybrany = false;
     }
 
-    public Pole coZbicBialego(Pole pierwszeZbicie ) {
-        if(pierwszeZbicie==null){
-            for(Pole p:board){
-                if(p.zajetePrzez==BIALY){
+    public Pole coZbicBialego(Pole pierwszeZbicie) {
+        if (pierwszeZbicie == null) {
+            for (Pole p : board) {
+                if (p.zajetePrzez == BIALY) {
                     return p;
                 }
             }
-        }else{
-            for(Pole p:board){
-                if(p.zajetePrzez==BIALY&&!p.czyToToSamoPole(pierwszeZbicie)){
+        } else {
+            for (Pole p : board) {
+                if (p.zajetePrzez == BIALY && !p.czyToToSamoPole(pierwszeZbicie)) {
                     return p;
                 }
             }
@@ -161,15 +160,15 @@ public class StanGry {
     }
 
     public Pole coZbicCzarnego(Pole pierwszeZbicie) {
-        if(pierwszeZbicie==null){
-            for(Pole p:board){
-                if(p.zajetePrzez==CZARNY){
+        if (pierwszeZbicie == null) {
+            for (Pole p : board) {
+                if (p.zajetePrzez == CZARNY) {
                     return p;
                 }
             }
-        }else{
-            for(Pole p:board){
-                if(p.zajetePrzez==CZARNY&&!p.czyToToSamoPole(pierwszeZbicie)){
+        } else {
+            for (Pole p : board) {
+                if (p.zajetePrzez == CZARNY && !p.czyToToSamoPole(pierwszeZbicie)) {
                     return p;
                 }
             }
@@ -194,5 +193,56 @@ public class StanGry {
                 }
             }
         }
+    }
+
+    public int policzLiczbeRuchowGracza(Gracz gracz) {
+        int liczbaRuchow = 0;
+        ArrayList<Pole> polaGracza = polaGracza(gracz);
+        for (Pole pole : polaGracza) {
+            liczbaRuchow += liczbaDostepnychRuchowDlaPola(pole);
+
+
+        }
+
+        return liczbaRuchow;
+    }
+
+    private int liczbaDostepnychRuchowDlaPola(Pole pole) {
+        int liczba = 0;
+        if (pole != null)
+            for (Pole sasiad : pole.sasiedzi) {
+                if (sasiad.czyWolne) {
+                    if (pole.zajetePrzez == BIALY) {
+                        if (blokowanyBialyPionek != null && blokowanyBialyPionek.czyToToSamoPole(pole)) {
+                            if (!sasiad.czyToToSamoPole(ostatniePoleBialego)) {
+                                liczba++;
+                            }
+                        } else {
+                            liczba++;
+                        }
+                    } else if (pole.zajetePrzez == CZARNY) {
+                        if (blokowanyCzarnyPionek != null && blokowanyCzarnyPionek.czyToToSamoPole(pole)) {
+                            if (!sasiad.czyToToSamoPole(ostatniePoleCzarnego)) {
+                                liczba++;
+                            }
+                        } else {
+                            liczba++;
+                        }
+                    }
+                }
+            }
+
+
+        return liczba;
+    }
+
+    private ArrayList polaGracza(Gracz gracz) {
+        ArrayList<Pole> pola = new ArrayList<>();
+        for (Pole pole : board) {
+            if (pole.zajetePrzez == gracz) {
+                pola.add(pole);
+            }
+        }
+        return pola;
     }
 }
