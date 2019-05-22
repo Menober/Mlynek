@@ -32,8 +32,8 @@ public class MenuState extends State {
 
     @Override
     public void render(Graphics g) {
-        g.setColor(Color.yellow);
-        g.fillRect(20,20,800-40,600-40);
+        g.setColor(new Color(255, 251, 139));
+        g.fillRect(0,0,1300,1300);
 
         if(option==0)
             g.drawImage(Assets.starth,50,50,null);

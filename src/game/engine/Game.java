@@ -160,6 +160,8 @@ public class Game implements Runnable {
             graphics.drawString("Aktualne punkty za młynki:" + policzPunktyZaMlynki(ruch), 10, 920);
             graphics.drawString("Czy B zbija:" + czyBialyZbija+" ile:"+ileBialyZbija, 10, 940);
             graphics.drawString("Czy C zbija:" + czyCzarnyZbija+" ile:"+ileCzarnyZbija, 10, 960);
+            graphics.drawString("Liczba ruchów B:C-"+liczbaRuchowBialego+":"+liczbaRuchowCzarnego, 10, 980);
+
 
             if (ruch == BIALY)
                 graphics.drawImage(Assets.player1, 1100, 766, 64, 64, null);
@@ -350,10 +352,11 @@ public class Game implements Runnable {
                         if (r.czyZbija) { //możliwy nullpointer
                             r.coZbic = r.stanGry.coZbicBialego(null);
                             if (r.ileZbija == 2) {
-                                r.coZbic = r.stanGry.coZbicBialego(r.coZbic);
+                                r.coZbic2 = r.stanGry.coZbicBialego(r.coZbic);
                             }
                         }
                         r.liczbaPunktowPoRuchu = r.stanGry.punktyCzarnego;
+                        System.out.println("ILEZBIJA"+r.ileZbija);
                         ruchy.add(r);
                     }
                 }
@@ -372,7 +375,7 @@ public class Game implements Runnable {
                             if (r.czyZbija) { //możliwy nullpointer
                                 r.coZbic = r.stanGry.coZbicBialego(null);
                                 if (r.ileZbija == 2) {
-                                    r.coZbic = r.stanGry.coZbicBialego(r.coZbic);
+                                    r.coZbic2 = r.stanGry.coZbicBialego(r.coZbic);
                                 }
                             }
                             r.liczbaPunktowPoRuchu = r.stanGry.punktyCzarnego;
@@ -396,7 +399,7 @@ public class Game implements Runnable {
                                     if (r.czyZbija) { //możliwy nullpointer
                                         r.coZbic = r.stanGry.coZbicBialego(null);
                                         if (r.ileZbija == 2) {
-                                            r.coZbic = r.stanGry.coZbicBialego(r.coZbic);
+                                            r.coZbic2 = r.stanGry.coZbicBialego(r.coZbic);
                                         }
                                     }
                                     r.liczbaPunktowPoRuchu = r.stanGry.punktyCzarnego;
@@ -421,7 +424,7 @@ public class Game implements Runnable {
                         if (r.czyZbija) { //możliwy nullpointer
                             r.coZbic = r.stanGry.coZbicCzarnego(null);
                             if (r.ileZbija == 2) {
-                                r.coZbic = r.stanGry.coZbicCzarnego(r.coZbic);
+                                r.coZbic2 = r.stanGry.coZbicCzarnego(r.coZbic);
                             }
                         }
                         r.liczbaPunktowPoRuchu = r.stanGry.punktyBialego;
@@ -443,10 +446,11 @@ public class Game implements Runnable {
                             if (r.czyZbija) { //możliwy nullpointer
                                 r.coZbic = r.stanGry.coZbicCzarnego(null);
                                 if (r.ileZbija == 2) {
-                                    r.coZbic = r.stanGry.coZbicCzarnego(r.coZbic);
+                                    r.coZbic2 = r.stanGry.coZbicCzarnego(r.coZbic);
                                 }
                             }
                             r.liczbaPunktowPoRuchu = r.stanGry.punktyBialego;
+                            System.out.println("ILEZBIJA"+r.ileZbija);
                             ruchy.add(r);
                         }
                     }
@@ -467,10 +471,11 @@ public class Game implements Runnable {
                                     if (r.czyZbija) { //możliwy nullpointer
                                         r.coZbic = r.stanGry.coZbicCzarnego(null);
                                         if (r.ileZbija == 2) {
-                                            r.coZbic = r.stanGry.coZbicCzarnego(r.coZbic);
+                                            r.coZbic2 = r.stanGry.coZbicCzarnego(r.coZbic);
                                         }
                                     }
                                     r.liczbaPunktowPoRuchu = r.stanGry.punktyBialego;
+                                    System.out.println("ILEZBIJA"+r.ileZbija);
                                     ruchy.add(r);
                                 }
                             }
@@ -537,6 +542,10 @@ public class Game implements Runnable {
         stan.wykonajRuch(r, r.gracz);
         stan.punktyCzarnego = stan.policzPunktyZaMlynki(CZARNY, stan.board);
         stan.punktyBialego = stan.policzPunktyZaMlynki(BIALY, stan.board);
+        if(r.gracz==BIALY)
+            r.ileZbija=stan.ileBialyZbija;
+        else
+            r.ileZbija= stan.ileCzarnyZbija;
         //stan.aktywujMlynki(r.dokad);
 
         return stan;
@@ -749,22 +758,31 @@ public class Game implements Runnable {
                 log("Czas rozgrywki:"+(System.currentTimeMillis() - czasOdStartu) / 1000 + " [s]");
                 EndgameState endgameState = new EndgameState(handler);
                 setCurrentState(endgameState);
+            }else if(liczbaRuchowCzarnego>200||liczbaRuchowBialego>200){
+                ktoWygral = null;
+                log("REMIS");
+                log("Czas rozgrywki:"+(System.currentTimeMillis() - czasOdStartu) / 1000 + " [s]");
+                EndgameState endgameState = new EndgameState(handler);
+                setCurrentState(endgameState);
             }
         }
     }
 
     private void zbijPionek(Pole pionek) {
-        if (pionek.zajetePrzez == BIALY) {
-            liczbaPionkowCZARNY -= 1;
-            ileBialyZbija -= 1;
-            liczbaRuchowBialego+=1;
-        } else if (pionek.zajetePrzez == CZARNY) {
+        if (pionek.zajetePrzez == BIALY && ileCzarnyZbija>0) {
             liczbaPionkowBIALY -= 1;
             ileCzarnyZbija -= 1;
             liczbaRuchowCzarnego+=1;
+            log("AI:CZARNY zbija:"+pionek.pozycja());
+            zwolnijPole(polePodAlphaNumber(pionek.alpha, pionek.number));
+        } else if (pionek.zajetePrzez == CZARNY&&ileBialyZbija>0) {
+            liczbaPionkowCZARNY -= 1;
+            ileBialyZbija -= 1;
+            liczbaRuchowBialego+=1;
+            log("AI:BIALY zbija:"+pionek.pozycja());
+            zwolnijPole(polePodAlphaNumber(pionek.alpha, pionek.number));
         }
-        log("AI:"+pionek.zajetePrzez+" zbija:"+pionek.pozycja());
-        zwolnijPole(polePodAlphaNumber(pionek.alpha, pionek.number));
+
     }
 
     private void wykonajRuch(Ruch r, Gracz ruch) {
@@ -779,10 +797,12 @@ public class Game implements Runnable {
                 wstawPionek(CZARNY, r.dokad.alpha, r.dokad.number);
                 aktywujMlynki(polePodAlphaNumber(r.dokad.alpha, r.dokad.number));
                 if (r.czyZbija) { //breakpoint
+                    ileCzarnyZbija=r.ileZbija;
                     zbijPionek(r.coZbic);
                     if (r.ileZbija == 2) {
                         zbijPionek(r.coZbic2);
                     }
+                    ileCzarnyZbija=0;
                     czyCzarnyZbija = false;
                     this.ruch = BIALY;
                 }
@@ -795,10 +815,14 @@ public class Game implements Runnable {
                 blokowanyCzarnyPionek = polePodAlphaNumber(r.dokad.alpha, r.dokad.number);
                 aktywujMlynki(polePodAlphaNumber(r.dokad.alpha, r.dokad.number));
                 if (r.czyZbija) {
+                    ileCzarnyZbija=r.ileZbija;
                     zbijPionek(r.coZbic);
                     if (r.ileZbija == 2) {
                         zbijPionek(r.coZbic2);
                     }
+                    ileCzarnyZbija=0;
+                    czyCzarnyZbija = false;
+                    this.ruch = BIALY;
                 }
             }
 
@@ -808,10 +832,12 @@ public class Game implements Runnable {
                 wstawPionek(BIALY, r.dokad.alpha, r.dokad.number);
                 aktywujMlynki(polePodAlphaNumber(r.dokad.alpha, r.dokad.number));
                 if (r.czyZbija) { //breakpoint
+                    ileBialyZbija=r.ileZbija;
                     zbijPionek(r.coZbic);
                     if (r.ileZbija == 2) {
                         zbijPionek(r.coZbic2);
                     }
+                    ileBialyZbija=0;
                     czyBialyZbija = false;
                     this.ruch = CZARNY;
                 }
@@ -824,10 +850,14 @@ public class Game implements Runnable {
                 blokowanyBialyPionek = polePodAlphaNumber(r.dokad.alpha, r.dokad.number);
                 aktywujMlynki(polePodAlphaNumber(r.dokad.alpha, r.dokad.number));
                 if (r.czyZbija) {
+                    ileBialyZbija=r.ileZbija;
                     zbijPionek(r.coZbic);
                     if (r.ileZbija == 2) {
                         zbijPionek(r.coZbic2);
                     }
+                    ileBialyZbija=0;
+                    czyBialyZbija = false;
+                    this.ruch = CZARNY;
                 }
             }
 
@@ -959,15 +989,15 @@ public class Game implements Runnable {
                     if (liczbaPionkowDoRozstawieniaBIALY > 0) {
                         liczbaPionkowDoRozstawieniaBIALY -= 1;
                         liczbaPionkowBIALY += 1;
-                        liczbaRuchowBialego+=1;
                     }
+                    liczbaRuchowBialego+=1;
                 } else if (gracz == CZARNY) {
                     ruch = BIALY;
                     if (liczbaPionkowDoRozstawieniaCZARNY > 0) {
                         liczbaPionkowDoRozstawieniaCZARNY -= 1;
                         liczbaPionkowCZARNY += 1;
-                        liczbaRuchowCzarnego+=1;
                     }
+                    liczbaRuchowCzarnego+=1;
                 }
             }
 

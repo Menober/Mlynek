@@ -33,7 +33,7 @@ public class StanGry {
     Ruch ruchCzarnego = null;
     Ruch ruchBialego = null;
 
-    
+
 
     public int policzPunktyZaMlynki(Gracz gracz,ArrayList<Pole> board) {
         int liczbaPunktow = 0;
